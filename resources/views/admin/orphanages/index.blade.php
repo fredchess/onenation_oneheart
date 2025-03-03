@@ -19,6 +19,7 @@ Orphelinats
                     <h4 class="card-title">Liste des orphelinats</h4>
                     <div class="text-right" style="text-align: right;">
                         <a href="{{route("orphanages.create")}}" class="btn btn-success">Ajouter un orphelinat</a>
+                        <a href="{{route("orphanages.download")}}" class="btn btn-primary">Telecharger le Excel</a>
                     </div>
                 </div>
                 <div class="table-responsive">

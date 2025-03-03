@@ -13,7 +13,7 @@ class StripeGateway implements BaseGateway
 {
     public function pay(Request $request, Donation $donation) : string
     {
-        $key = env("STRIPE_SECRET");
+        $key = config('payment.stripe.secret_key');
 
         $stripe = new StripeClient($key);
 

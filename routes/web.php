@@ -58,6 +58,10 @@ Route::group(['prefix' => 'admin', 'middleware' => ["auth"]], function () {
     Route::resource('orphanages', OrphanageController::class)->only(['edit', 'update']);
 });
 
+Route::get('/orphanages/download', [OrphanageController::class, 'download'])
+        ->middleware('auth')
+        ->name('orphanages.download');
+
 Route::get('/', [PageController::class, "home"])->name("public.home");
 Route::get('/about', [PageController::class, "about"])->name("public.about");
 Route::get('/search', [PageController::class, "search"])->name("public.search");

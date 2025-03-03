@@ -120,6 +120,7 @@ class DonationController extends Controller
 
                 return redirect($url);
             } catch (\Exception $e) {
+                Log::error($e->getMessage(), ['key_from_config' => config('payment.stripe.secret_key'), 'key_from_env' => env('STRIPE_SECRET')]);
                 return redirect()->back()->with("error", $e->getMessage());
             }
         }

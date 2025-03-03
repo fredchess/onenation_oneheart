@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\OrphanagesExport;
 use App\Models\City;
 use App\Models\Orphanage;
 use App\Models\User;
@@ -10,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Maatwebsite\Excel\Facades\Excel;
 
 class OrphanageController extends Controller
 {
@@ -977,6 +979,11 @@ class OrphanageController extends Controller
             'name'          => $name,
             'original_name' => $file->getClientOriginalName(),
         ]);
+    }
+
+    public function download() 
+    {
+        return Excel::download(new OrphanagesExport, 'orphelinats.xlsx');
     }
 
 }
