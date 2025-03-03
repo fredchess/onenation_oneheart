@@ -2,16 +2,39 @@
 
 namespace App\Filament\Widgets;
 
+use App\Enums\UserRoleEnum;
 use App\Models\Donation;
 use App\Models\Orphanage;
 use App\Models\User;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class AppOverview extends BaseWidget
 {
     protected function getStats(): array
     {
+        /**
+         * @var User $user
+         */
+        $user = Auth::user();
+
+        if ($user->hasRole(UserRoleEnum::RESPONSABLE->value)) {
+            return [
+                Stat::make('Nb. de visites', 0),
+                Stat::make('Dons', function () use ($user) {
+                    $ans = DB::table('donations')
+                        ->join('orphanages', 'orphanages.id', '=', 'donations.orphanage_id')
+                        ->where('orphanages.responsable_id', $user->id)
+                        ->where('donations.status', true)
+                        ->sum('donations.amount') . " FCFA";
+
+                    return $ans;
+                })->icon('heroicon-o-currency-dollar'),
+            ];
+        }
+
         return [
             Stat::make('Nb. de visites', 0)
                 ->icon('heroicon-o-eye'),

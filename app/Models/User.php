@@ -7,6 +7,7 @@ use Filament\Models\Contracts\FilamentUser;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -53,11 +54,20 @@ class User extends Authenticatable implements HasMedia, FilamentUser
 
     public function canAccessPanel(\Filament\Panel $panel): bool
     {
-        return $this->hasRole([UserRoleEnum::ADMIN->value, UserRoleEnum::SUPER_ADMIN->value, UserRoleEnum::RESPONSABLE->value]);
+        if ($panel->getId() === 'admin') {
+            return $this->hasRole([UserRoleEnum::ADMIN->value, UserRoleEnum::SUPER_ADMIN->value, UserRoleEnum::RESPONSABLE->value]);
+        }
+
+        return false;
     }
 
     public function orphanage()
     {
         return $this->hasOne(Orphanage::class, 'responsable_id');
+    }
+
+    public function orphanages() : HasMany
+    {
+        return $this->hasMany(Orphanage::class, 'responsable_id');
     }
 }

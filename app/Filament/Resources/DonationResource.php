@@ -2,9 +2,11 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\UserRoleEnum;
 use App\Filament\Resources\DonationResource\Pages;
 use App\Filament\Resources\DonationResource\RelationManagers;
 use App\Models\Donation;
+use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -14,6 +16,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
 
 class DonationResource extends Resource
 {
@@ -22,6 +25,13 @@ class DonationResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
     protected static ?string $navigationGroup = 'Administration';
     protected static ?string $label = 'Don';
+    public static function canAccess(): bool
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        return $user->hasRole([UserRoleEnum::ADMIN->value, UserRoleEnum::SUPER_ADMIN->value]);
+    }
 
     public static function form(Form $form): Form
     {

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\UserRoleEnum;
 use App\Filament\Resources\OrphanageResource\Pages;
 use App\Filament\Resources\OrphanageResource\RelationManagers;
 use App\Models\Orphanage;
@@ -24,6 +25,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 
@@ -36,6 +38,11 @@ class OrphanageResource extends Resource
 
     public static function form(Form $form): Form
     {
+        /**
+         * @var User $user
+         */
+        $user = Auth::user();
+
         return $form
             ->schema([
                 Section::make('ID Orphelinat')
@@ -122,7 +129,8 @@ class OrphanageResource extends Resource
                                                 return $user->getkey();
                                             })
                                         ])
-                                    ->columns(2),
+                                    ->columns(2)
+                                    ->hidden(!$user->hasRole([UserRoleEnum::ADMIN->value, UserRoleEnum::SUPER_ADMIN->value])),
                                 Tab::make('Secondant')
                                     ->schema([
                                         TextInput::make('data_identity_promoter.second_name')
@@ -308,7 +316,18 @@ class OrphanageResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->modifyQueryUsing(function (Builder $query) {
+                /**@var User $user */
+                $user = Auth::user();
+
+                if ($user->hasRole([UserRoleEnum::ADMIN->value, UserRoleEnum::SUPER_ADMIN->value])) {
+                    return $query;
+                }
+
+                return $query->with('responsable')
+                    ->where('responsable_id', $user->id);
+            });
     }
 
     public static function getRelations(): array

@@ -14,6 +14,7 @@ use CyrildeWit\EloquentViewable\Contracts\Viewable;
 use CyrildeWit\EloquentViewable\InteractsWithViews;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Orphanage extends Model implements Viewable, HasMedia, Searchable
 {
@@ -85,5 +86,10 @@ class Orphanage extends Model implements Viewable, HasMedia, Searchable
     public function responsable() : BelongsTo
     {
         return $this->belongsTo(User::class, 'responsable_id');
+    }
+
+    public function donations() : HasMany
+    {
+        return $this->hasMany(Donation::class);
     }
 }

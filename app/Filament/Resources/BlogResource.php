@@ -2,9 +2,11 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\UserRoleEnum;
 use App\Filament\Resources\BlogResource\Pages;
 use App\Filament\Resources\BlogResource\RelationManagers;
 use App\Models\Blog;
+use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\RichEditor;
@@ -17,6 +19,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
 
 use function Laravel\Prompts\textarea;
 
@@ -25,6 +28,14 @@ class BlogResource extends Resource
     protected static ?string $model = Blog::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-book-open';
+
+    public static function canAccess(): bool
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        return $user->hasRole([UserRoleEnum::ADMIN->value, UserRoleEnum::SUPER_ADMIN->value]);
+    }
 
     public static function form(Form $form): Form
     {

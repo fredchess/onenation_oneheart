@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\UserRoleEnum;
 use App\Filament\Resources\ResponsableResource\Pages;
 use App\Filament\Resources\ResponsableResource\RelationManagers;
 use App\Models\Responsable;
@@ -15,6 +16,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class ResponsableResource extends Resource
@@ -24,6 +26,13 @@ class ResponsableResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-user';
     public static ?string $label = "Responsable";
     public static ?string $navigationGroup = "Administration";
+    public static function canAccess(): bool
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        return $user->hasRole([UserRoleEnum::ADMIN->value, UserRoleEnum::SUPER_ADMIN->value]);
+    }
 
     public static function form(Form $form): Form
     {
