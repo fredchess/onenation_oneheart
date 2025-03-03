@@ -6,6 +6,7 @@ use App\Enums\UserRoleEnum;
 use App\Models\Donation;
 use App\Models\Orphanage;
 use App\Models\User;
+use CyrildeWit\EloquentViewable\View;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Facades\Auth;
@@ -22,7 +23,7 @@ class AppOverview extends BaseWidget
 
         if ($user->hasRole(UserRoleEnum::RESPONSABLE->value)) {
             return [
-                Stat::make('Nb. de visites', 0),
+                Stat::make('Nb. de visites', $user->orphanages()->first() ? $user->orphanages->map(fn ($orphanage) => $orphanage->views()->count())->sum() : 0),
                 Stat::make('Dons', function () use ($user) {
                     $ans = DB::table('donations')
                         ->join('orphanages', 'orphanages.id', '=', 'donations.orphanage_id')
@@ -36,7 +37,7 @@ class AppOverview extends BaseWidget
         }
 
         return [
-            Stat::make('Nb. de visites', 0)
+            Stat::make('Nb. de visites', View::count())
                 ->icon('heroicon-o-eye'),
             Stat::make('Bénévoles', function () {
                 return User::count();

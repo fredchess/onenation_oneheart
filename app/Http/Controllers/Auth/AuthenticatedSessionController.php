@@ -17,6 +17,7 @@ class AuthenticatedSessionController extends Controller
      */
     public function create()
     {
+        return redirect()->route('filament.admin.auth.login');
         return view('auth.login');
     }
 
