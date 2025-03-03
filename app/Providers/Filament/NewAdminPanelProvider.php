@@ -25,8 +25,8 @@ class NewAdminPanelProvider extends PanelProvider
     {
         return $panel
             ->default()
-            ->id('new-admin')
-            ->path('new-admin')
+            ->id('admin')
+            ->path('dashboard')
             ->login()
             ->colors([
                 'primary' => Color::Fuchsia,
