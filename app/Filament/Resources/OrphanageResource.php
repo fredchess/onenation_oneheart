@@ -22,6 +22,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Forms\Set;
 use Filament\Resources\Resource;
+use Filament\Support\Enums\IconPosition;
 use Filament\Tables;
 use Filament\Tables\Actions\ExportAction;
 use Filament\Tables\Columns\TextColumn;
@@ -334,6 +335,10 @@ class OrphanageResource extends Resource
                     ->where('responsable_id', $user->id);
             })->headerActions([
                 ExportAction::make()->exporter(OrphanageExporter::class)
+                    ->label('Exporter')
+                    ->color('secondary')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->iconPosition(IconPosition::After),
             ]);
     }
 

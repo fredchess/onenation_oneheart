@@ -30,6 +30,7 @@ class NewAdminPanelProvider extends PanelProvider
             ->login()
             ->colors([
                 'primary' => Color::Fuchsia,
+                'secondary' => Color::Blue
             ])
             ->brandName('ONOH')
             ->brandLogo(asset('lovecare/images/logo.png'))
