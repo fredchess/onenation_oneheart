@@ -3,10 +3,12 @@
 namespace App\Filament\Resources;
 
 use App\Enums\UserRoleEnum;
+use App\Filament\Exports\OrphanageExporter;
 use App\Filament\Resources\OrphanageResource\Pages;
 use App\Filament\Resources\OrphanageResource\RelationManagers;
 use App\Models\Orphanage;
 use App\Models\User;
+use Filament\Actions\ExportAction as ActionsExportAction;
 use Filament\Forms;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\RichEditor;
@@ -21,6 +23,7 @@ use Filament\Forms\Form;
 use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\ExportAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -297,7 +300,9 @@ class OrphanageResource extends Resource
                 TextColumn::make('name')
                     ->label('Nom'),
                 TextColumn::make('visites')
-                    ->label('Nb. visites'),
+                    ->label('Nb. visites')->getStateUsing(function ($record) {
+                        return views($record)->count();
+                    }),
                 TextColumn::make('city.name'),
                 // TextColumn::make('dons_sum_amount')
                 //     ->sum('dons', function (Builder $query) {
@@ -327,7 +332,9 @@ class OrphanageResource extends Resource
 
                 return $query->with('responsable')
                     ->where('responsable_id', $user->id);
-            });
+            })->headerActions([
+                ExportAction::make()->exporter(OrphanageExporter::class)
+            ]);
     }
 
     public static function getRelations(): array

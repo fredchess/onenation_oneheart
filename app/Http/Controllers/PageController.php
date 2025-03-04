@@ -207,6 +207,10 @@ class PageController extends Controller
 
     public function joinus_register(Request $request)
     {
+        $request->validate([
+            'email' => 'required|email|unique:users',
+        ]);
+        
         $user = new User;
         $user->name = $request->name;
         $user->email = $request->email;

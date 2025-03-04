@@ -82,6 +82,8 @@ Route::get('/test', [TestController::class, 'List']);
 
 Route::post("callback/dvXQEdsFNNCcfTYCrvGY", [DonationController::class, 'callback_dvXQEdsFNNCcfTYCrvGY'])->name('callback');
 
+Auth::routes(['register' => false, 'login' => false]);
+
 Route::get('login', function () {
     return redirect()->route('filament.admin.auth.login');
 })->name('login');

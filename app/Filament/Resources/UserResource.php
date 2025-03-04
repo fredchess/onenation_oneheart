@@ -3,13 +3,16 @@
 namespace App\Filament\Resources;
 
 use App\Enums\UserRoleEnum;
+use App\Filament\Exports\OrphanageExporter;
 use App\Filament\Resources\UserResource\Pages;
 use App\Filament\Resources\UserResource\RelationManagers;
 use App\Models\User;
+use Filament\Actions\ExportAction;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -41,9 +44,14 @@ class UserResource extends Resource
                     ->email()
                     ->required()
                     ->maxLength(255),
+                Forms\Components\TextInput::make('datas.tel')
+                    ->required(),
+                Forms\Components\TextInput::make('datas.pays')
+                    ->required(),
+                Forms\Components\TextInput::make('datas.ville')
+                    ->required(),
                 Forms\Components\TextInput::make('password')
                     ->password()
-                    ->required()
                     ->maxLength(255),
             ]);
     }
@@ -56,6 +64,13 @@ class UserResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('email')
                     ->searchable(),
+                TextColumn::make('datas.tel')->label('Tel'),
+                TextColumn::make('datas.pays')
+                    ->getStateUsing(function ($record) {
+                        return $record->datas['pays'] .' - '. $record->datas['ville'];
+                    })
+                    ->label('Pays/Ville'),
+                TextColumn::make('datas.title')->label('Compétences'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -80,7 +95,8 @@ class UserResource extends Resource
                 $query->whereHas('roles', function (Builder $query) {
                     $query->where('name', UserRoleEnum::USER->value)
                         ->orWhere('name', UserRoleEnum::ADMIN->value);
-                });
+                })
+                ->orderBy('created_at', 'desc');
             });
     }
 
