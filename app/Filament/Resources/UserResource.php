@@ -70,11 +70,12 @@ class UserResource extends Resource
                         return $record->datas['pays'] .' - '. $record->datas['ville'];
                     })
                     ->label('Pays/Ville'),
-                TextColumn::make('datas.title')->label('Compétences'),
+                TextColumn::make('datas.preferences')->label('Compétences'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->label("Date d'ajout")
+                    ->toggleable(isToggledHiddenByDefault: false)->date(),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
