@@ -58,8 +58,7 @@ class OrphanageResource extends Resource
                             ->label('email')
                             ->email(),
                         TextInput::make('data_identity.website')
-                            ->label('Site web')
-                            ->url(),
+                            ->label('Site web'),
                         TextInput::make('data_identity.arret_number')
                             ->label('Numero d\'arrete'),
                         RichEditor::make('data_identity.history')
