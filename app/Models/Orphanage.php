@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Tag;
 use App\Models\City;
 use App\Models\Donation;
+use App\Observers\OrphanageObserver;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\Searchable\Searchable;
 use Spatie\Searchable\SearchResult;
@@ -12,10 +13,13 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use CyrildeWit\EloquentViewable\Contracts\Viewable;
 use CyrildeWit\EloquentViewable\InteractsWithViews;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+
+#[ObservedBy(OrphanageObserver::class)]
 class Orphanage extends Model implements Viewable, HasMedia, Searchable
 {
     use HasFactory, InteractsWithViews, InteractsWithMedia;
