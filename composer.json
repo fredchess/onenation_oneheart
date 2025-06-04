@@ -13,6 +13,7 @@
         "laravel/tinker": "^2.9",
         "laravel/ui": "^4.5",
         "maatwebsite/excel": "^3.1",
+        "milwad/laravel-validate": "^1.9",
         "spatie/laravel-medialibrary": "^11.9",
         "spatie/laravel-permission": "^6.9",
         "spatie/laravel-searchable": "^1.12",

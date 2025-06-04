@@ -71,21 +71,21 @@
                                     <div class="col-lg-4">
                                         <div class="form-group">
                                             <label for="">Nom complet</label>
-                                            <input type="text" autofocus class="form-control" name="name" id="name"
+                                            <input type="text" autofocus class="form-control" name="name" id="name" value="{{ old('name') }}"
                                                 placeholder="Nom complet">
                                         </div>
                                     </div>
                                     <div class="col-lg-4">
                                         <div class="form-group">
                                             <label for="">Email</label>
-                                            <input type="email" class="form-control" name="email" id="email"
+                                            <input type="email" class="form-control" name="email" id="email" value="{{ old('email') }}"
                                                 placeholder="Email">
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="form-group">
                                             <label for="">N° de telephone</label>
-                                            <input type="tel" class="form-control" name="tel" id="tel"
+                                            <input type="tel" class="form-control" name="tel" id="tel" value="{{ old('tel') }}"
                                                 placeholder="N° de téléphone ">
                                         </div>
                                     </div>
@@ -93,7 +93,7 @@
                                     <div class="col-lg-6">
                                         <div class="form-group">
                                             <label for="">Comment as-tu connu One Nation One Heart (ONOH)?</label>
-                                            <select name="provenance" class="form-control" id="">
+                                            <select name="provenance" class="form-control" id="" value="{{ old('provenance') }}">
                                                 <option value="bouche-oreille">Bouche à oreille</option>
                                                 <option value="reseaux-sociaux">Réseaux sociaux</option>
                                                 <option value="autres">Autres</option>
@@ -104,7 +104,7 @@
                                         <div class="form-group">
                                             <label for="">Dans quelle ville résides-tu ?</label>
 
-                                            <input type="text" class="form-control" name="city" id="city"
+                                            <input type="text" class="form-control" name="city" id="city" value="{{ old('city') }}"
                                                 placeholder="Votre ville de résidence">
                                         </div>
                                     </div>
@@ -115,7 +115,7 @@
                                             <label for="">As-tu deja été investi précédemment dans une association a but non
                                                 lucratif? Si oui, parle nous-en en quelques mots.</label>
                                             <textarea name="past_experience" class="form-control" id="message" cols="30" rows="7"
-                                                placeholder="As-tu deja été investi précédemment dans une association a but non lucrative? Si oui, parle nous-en en quelques mots."></textarea>
+                                                placeholder="As-tu deja été investi précédemment dans une association a but non lucrative? Si oui, parle nous-en en quelques mots.">{{ old('past_experience') }}</textarea>
                                         </div>
                                     </div>
 

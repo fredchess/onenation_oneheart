@@ -11,6 +11,8 @@ use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Milwad\LaravelValidate\Rules\ValidPhoneNumber;
+use Milwad\LaravelValidate\Utils\Country;
 
 class PageController extends Controller
 {
@@ -209,6 +211,7 @@ class PageController extends Controller
     {
         $request->validate([
             'email' => 'required|email|unique:users',
+            'tel' => [new ValidPhoneNumber(Country::CAMEROON)]
         ]);
         
         $user = new User;
