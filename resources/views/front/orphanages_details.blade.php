@@ -42,7 +42,7 @@
                             <ul>
                                 <li>{{ $orphelinat->data_stats['children_number'] }} enfants</li>
                                 <li>{{ $orphelinat->data_address['localisation'] ?? '' }} ({{ $orphelinat->city->name }})</li>
-                                <li>{{ $orphelinat->data_identity_promoter['promoter_phone'] ?? $orphelinat->responsable->data['tel'] ?? null }} / {{$orphelinat->data_identity_promoter['second_phone'] ?? '' }}</li>
+                                <li>{{ $orphelinat->data_identity_promoter['promoter_phone'] ?? ($orphelinat->responsable->datas['tel'] ?? null) }} / {{$orphelinat->data_identity_promoter['second_phone'] ?? '' }}</li>
                                 @if($orphelinat->data_identity['website'])
                                     <li>
                                         <a href="{{ (strpos($orphelinat->data_identity['website'], 'http') === 0) ? $orphelinat->data_identity['website'] : 'http://' . $orphelinat->data_identity['website'] }}" target="_blank">Site web
