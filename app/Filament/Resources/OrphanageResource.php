@@ -11,6 +11,7 @@ use App\Models\User;
 use Filament\Actions\ExportAction as ActionsExportAction;
 use Filament\Forms;
 use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
@@ -285,10 +286,14 @@ class OrphanageResource extends Resource
                 Section::make('ONOH et l\'orphelinat')
                     ->schema([
                         RichEditor::make('data_identity.withonoh')
+                            ->columnSpanFull()
                             ->label('ONOH et l\'orphelinat'),
+                        DatePicker::make('run_at')
+                            ->label('Dernière visite')
                     ])
                     ->collapsible()
                     ->collapsed()
+                    ->columns(2)
                     ->persistCollapsed(),
             ]);
     }

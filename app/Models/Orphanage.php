@@ -39,6 +39,7 @@ class Orphanage extends Model implements Viewable, HasMedia, Searchable
         'data_projects',
         'city_id',
         'responsable_id',
+        'run_at',
     ];
 
     /**

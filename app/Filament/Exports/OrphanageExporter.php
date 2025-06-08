@@ -88,6 +88,8 @@ class OrphanageExporter extends Exporter
             ExportColumn::make('total_visits')
                 ->label('Visites')
                 ->state(fn (Orphanage $orphanage) => views($orphanage)->count()),
+            ExportColumn::make('run_at')
+                ->label('Dernière descente'),
         ];
     }
 
