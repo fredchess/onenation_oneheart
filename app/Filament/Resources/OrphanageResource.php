@@ -5,10 +5,8 @@ namespace App\Filament\Resources;
 use App\Enums\UserRoleEnum;
 use App\Filament\Exports\OrphanageExporter;
 use App\Filament\Resources\OrphanageResource\Pages;
-use App\Filament\Resources\OrphanageResource\RelationManagers;
 use App\Models\Orphanage;
 use App\Models\User;
-use Filament\Actions\ExportAction as ActionsExportAction;
 use Filament\Forms;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
@@ -76,8 +74,6 @@ class OrphanageResource extends Resource
                             ->columnSpanFull(),
                         Checkbox::make('status')
                             ->label('Rendre visible'),
-                        // TextInput::make('withonoh')
-                        //     ->label(''),
                     ])
                     ->collapsible()
                     ->collapsed()
@@ -132,7 +128,7 @@ class OrphanageResource extends Resource
 
                                                 return $user->getkey();
                                             })
-                                        ])
+                                    ])
                                     ->columns(2)
                                     ->hidden(!$user->hasRole([UserRoleEnum::ADMIN->value, UserRoleEnum::SUPER_ADMIN->value])),
                                 Tab::make('Secondant')
@@ -213,7 +209,7 @@ class OrphanageResource extends Resource
                             ->numeric()
                             ->minValue(0)
                             ->label('Nombre de filles'),
-                        
+
                     ])
                     ->collapsible()
                     ->collapsed()
@@ -277,11 +273,21 @@ class OrphanageResource extends Resource
                 Section::make('Projets de l\'orphelinat')
                     ->schema([
                         RichEditor::make('projects')
-                            ->label('Projets'),
+                            ->label('Projets')
+                            ->columnSpanFull(),
+                        Select::make('project_categories')
+                            ->label('Projects (catégories)')
+                            ->relationship('project_categories', 'name')
+                            ->preload()
+                            ->multiple()
+                            ->createOptionForm([
+                                TextInput::make('name')
+                            ]),
                     ])
                     ->statePath('data_projects')
                     ->collapsible()
                     ->collapsed()
+                    ->columns(2)
                     ->persistCollapsed(),
                 Section::make('ONOH et l\'orphelinat')
                     ->schema([

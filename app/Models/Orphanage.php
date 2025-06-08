@@ -16,6 +16,7 @@ use CyrildeWit\EloquentViewable\InteractsWithViews;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 
@@ -96,5 +97,10 @@ class Orphanage extends Model implements Viewable, HasMedia, Searchable
     public function donations() : HasMany
     {
         return $this->hasMany(Donation::class);
+    }
+
+    public function project_categories() : BelongsToMany
+    {
+        return $this->belongsToMany(ProjectCategory::class);
     }
 }
