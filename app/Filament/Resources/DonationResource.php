@@ -13,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -65,7 +66,8 @@ class DonationResource extends Resource
                     ->boolean()
             ])
             ->filters([
-                //
+                SelectFilter::make('Status')
+                    ->options([true => 'Réussi', false => 'Echec']),
             ])
             ->actions([
                 Tables\Actions\DeleteAction::make(),
@@ -74,7 +76,7 @@ class DonationResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])->modifyQueryUsing(fn (Builder $query) => $query->orderBy('created_at'));
     }
 
     public static function getPages(): array

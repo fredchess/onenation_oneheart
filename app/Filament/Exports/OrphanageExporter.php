@@ -18,15 +18,15 @@ class OrphanageExporter extends Exporter
             ExportColumn::make('id')
                 ->label('ID'),
             ExportColumn::make('name'),
-            ExportColumn::make('data_stats1')
+            ExportColumn::make('data_stats_tranches')
                 ->label("Nb. d'enfants")
                 ->state(function (Orphanage $orphanage) {
-                    return "{$orphanage->data_stats['children_number_0_6']}, {$orphanage->data_stats['children_number_7_13']}, {$orphanage->data_stats['children_number_14_21']}" ?? 0;
+                    return $orphanage->data_stats['children_number'] ?? 0;
                 }),
-            ExportColumn::make('data_stats_tranches')
+            ExportColumn::make('data_stats1')
                 ->label("Tranches d'age")
                 ->state(function (Orphanage $orphanage) {
-                    return $orphanage->data_stats['children_number'] ?? 0;
+                    return "{$orphanage->data_stats['children_number_0_6']}, {$orphanage->data_stats['children_number_7_13']}, {$orphanage->data_stats['children_number_14_21']}" ?? 0;
                 }),
             ExportColumn::make('data_stats2')
                 ->label("Nb. de filles")
