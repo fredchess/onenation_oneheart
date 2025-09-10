@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\DonationTypeEnum;
 use App\Models\Donation;
 use App\Services\Payment\PaymentService;
 use App\Services\Payment\StripeGateway;
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rules\Enum;
 use Stripe\StripeClient;
 
 use function MongoDB\BSON\toJSON;
@@ -50,28 +52,40 @@ class DonationController extends Controller
         $request->validate([
             'name' => 'required',
             'email' => 'required|email',
+            'donate_option' => new Enum(DonationTypeEnum::class),
         ]);
 
         $donation = new Donation;
 
-        if ($request->donate_option == 'financial' && $request->payment_mode == 'momo') {
+        $existing = Donation::query()->where([
+            'status' => false,
+            'datas->email' => $request->email,
+            'orphanage_id' => $request->orphanage_id,
+        ])->first();
+
+        if ($existing) {
+            $donation = $existing;
+        }
+
+        if ($request->donate_option == DonationTypeEnum::FINANCIAL->value && $request->payment_mode == 'momo') {
             $request->validate([
                 'tel' => 'required',
                 'amount' => 'required|numeric'
             ]);
         }
-        elseif ($request->donate_option == 'financial') {
+        elseif ($request->donate_option == DonationTypeEnum::FINANCIAL->value) {
             $request->validate([
                 'amount_eur' => 'required|numeric'
             ]);
         }
-        $donation->amount = ($request->donate_option == 'financial' && $request->payment_mode == 'paypal') ? $request->amount_eur * 655 : $request->amount; // Conversion approximative du EUR en XAF lorsque le mode de paiement est PayPal
+        $donation->amount = ($request->donate_option == DonationTypeEnum::FINANCIAL->value && $request->payment_mode == 'paypal') ? $request->amount_eur * 655 : $request->amount; // Conversion approximative du EUR en XAF lorsque le mode de paiement est PayPal
         $donation->status = 0;
         $datas = [
             "name" => $request->name,
             "email" => $request->email,
             "tel" => $request->tel,
             "payment_mode" => $request->payment_mode,
+            "donate_option" => $request->donate_option,
         ];
         $donation->datas = $datas;
 
@@ -82,7 +96,7 @@ class DonationController extends Controller
 
         $transaction_ref = "onoh_{$donation->id}";
 
-        if ($request->donate_option == 'financial' && $request->payment_mode == 'momo') {
+        if ($request->donate_option == DonationTypeEnum::FINANCIAL->value && $request->payment_mode == 'momo') {
             $url = "https://my-coolpay.com/api/2d851069-b8ce-44c7-8511-4fbf77164cf9/paylink";
 
             $body = json_encode([
@@ -110,7 +124,7 @@ class DonationController extends Controller
             } catch (\Exception $e) {
                 return redirect()->back()->with('error' ,$e->getMessage());
             }
-        } else if ($request->donate_option == 'financial' && $request->payment_mode == 'paypal') {
+        } else if ($request->donate_option == DonationTypeEnum::FINANCIAL->value && $request->payment_mode == 'paypal') {
             try {
                 $paymentService = new PaymentService(new StripeGateway()); // Faire pareil pour MyCollPay
 

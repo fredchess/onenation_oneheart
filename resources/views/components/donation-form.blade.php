@@ -32,17 +32,15 @@
                     <label for="amount">Nature du Don </label>
 
                     <select class="form-select" name="donate_option" id="select-don">
-                        <option value="wearing" id="recepteur-option">Don vestimentaire</option>
-                        <option value="collector" id="Collecteur-option">Don alimentaire en nature</option>
-                        <option value="sponsoring" id="Sponsoring-option">Parrainage d'enfant</option>
-                        <option value="eating" id="achat-option">Achat alimentaire en ligne</option>
-                        <option value="financial" id="financial-option">Don financier</option>
+                        @foreach (\App\Enums\DonationTypeEnum::cases() as $key => $case)
+                            <option value="{{ $case->value }}" id="{{ $case->value }}-option" {{ $case->value != \App\Enums\DonationTypeEnum::FINANCIAL->value ? 'disabled': '' }}>{{ $case->label() }}</option>
+                        @endforeach
                     </select>
 
                 </div>
             </div>
 
-            <div id="financial-block" class="mt-3" style="display: none">
+            <div id="financial-block" class="mt-3" style="display: block">
                 <div class="col-md-12">
                     <div class="form-group d-flex" style="flex-wrap: wrap;">
                         <div class="form-check d-flex" id="mode3_payment">
