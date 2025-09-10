@@ -63,20 +63,25 @@ class DonationResource extends Resource
                     ->label('Orphelinat')
                     ->searchable(),
                 IconColumn::make('status')
-                    ->boolean()
+                    ->boolean(),
+                TextColumn::make('created_at')
+                    ->label('Fait le')
             ])
             ->filters([
                 SelectFilter::make('Status')
                     ->options([true => 'Réussi', false => 'Echec']),
             ])
             ->actions([
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\DeleteAction::make()
+                    ->hidden(function ($record) {
+                        return $record->status == true;
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ])->modifyQueryUsing(fn (Builder $query) => $query->orderBy('created_at'));
+            ])->modifyQueryUsing(fn (Builder $query) => $query->orderBy('created_at', 'desc'));
     }
 
     public static function getPages(): array
