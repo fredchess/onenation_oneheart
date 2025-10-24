@@ -24,7 +24,9 @@ RUN apk add --no-cache --virtual .build-deps \
     freetype \
     libpq \
     icu-libs \
+    imagemagick \
     # Configuration et installation des extensions PHP
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
     pdo \
     pdo_mysql \
@@ -36,7 +38,8 @@ RUN apk add --no-cache --virtual .build-deps \
     pcntl \
     intl \
     exif \
-    # Installation de Redis extension
+    gd \
+    # Installation de Redis extensions
     && pecl install redis \
     && docker-php-ext-enable redis \
     # Nettoyage complet des dépendances de build et cache
