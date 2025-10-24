@@ -1,0 +1,47 @@
+services:
+  php-fpm:
+    image: ghcr.io/fredchess/onenation_oneheart:latest
+    pull_policy: always
+    restart: unless-stopped
+    volumes:
+      - storage-data:/var/www/storage
+    env_file:
+      - .env
+    networks:
+      - onoh
+    healthcheck:
+      test: ["CMD-SHELL", "pidof php-fpm || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  nginx:
+    build:
+      context: ..
+      dockerfile: docker/nginx/Dockerfile
+      args:
+        GITHUB_REPOSITORY: fredchess/onenation_oneheart
+        IMAGE_TAG: ${IMAGE_TAG:-latest}
+      pull: true
+    restart: unless-stopped
+    depends_on:
+      - php-fpm
+    networks:
+      - onoh
+
+  redis:
+    image: redis:alpine
+    restart: unless-stopped
+    networks:
+      - onoh
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  storage-data:
+
+networks:
+  onoh:
