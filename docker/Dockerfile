@@ -80,44 +80,6 @@ COPY . .
 RUN composer run-script post-autoload-dump \
     && composer clear-cache
 
-
-# =========================
-# 🧰 Build des assets Node + Wayfinder
-# =========================
-FROM node:22-alpine AS node-builder
-
-# ⚙️ Important : utiliser le même répertoire que Laravel
-WORKDIR /var/www
-
-# Installer PHP pour exécuter Artisan (nécessaire à Wayfinder)
-RUN apk add --no-cache \
-    php83 php83-phar php83-iconv php83-openssl php83-tokenizer php83-fileinfo \
-    php83-dom php83-xml php83-xmlwriter php83-mbstring php83-curl php83-json php83-session \
-    php83-pdo php83-pdo_sqlite php83-pdo_mysql php83-pdo_pgsql
-
-# Copier le projet Laravel complet depuis le backend
-COPY --from=backend /var/www /var/www
-
-# Copier les fichiers de dépendances Node
-COPY package.json package-lock.json ./
-
-# Installer les dépendances npm
-RUN npm ci
-
-# Créer un .env minimal pour que Laravel puisse booter
-RUN echo "APP_KEY=base64:$(php -r 'echo base64_encode(random_bytes(32));')" > .env && \
-    echo "APP_ENV=production" >> .env && \
-    echo "LOG_CHANNEL=stack" >> .env && \
-    echo "DB_CONNECTION=sqlite" >> .env && \
-    mkdir -p database && touch database/database.sqlite
-
-# Générer les types Wayfinder (sans planter si problème)
-# RUN php artisan wayfinder:generate --with-form
-
-# Compiler les assets front
-RUN npm run build
-
-
 # =========================
 # 🚀 Image finale de production
 # =========================
@@ -127,9 +89,6 @@ WORKDIR /var/www
 
 # Copier le code backend (incluant vendor)
 COPY --from=backend /var/www /var/www
-
-# Copier uniquement les assets compilés
-COPY --from=node-builder /var/www/public/build /var/www/public/build
 
 # Ajuster les permissions
 RUN chown -R www-data:www-data /var/www \
