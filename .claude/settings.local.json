@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/frede/Herd/digipass/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
