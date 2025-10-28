@@ -1,5 +1,5 @@
 services:
-  php-fpm:
+  onoh-php-fpm:
     image: ghcr.io/fredchess/onenation_oneheart:latest
     pull_policy: always
     restart: unless-stopped
@@ -9,14 +9,14 @@ services:
       - .env
     networks:
       - onoh
-      - dokploy-network
+      # - dokploy-network
     healthcheck:
-      test: ["CMD-SHELL", "pidof php-fpm || exit 1"]
+      test: ["CMD-SHELL", "pidof onoh-php-fpm || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 3
 
-  nginx:
+  onoh-nginx:
     build:
       context: ..
       dockerfile: docker/nginx/Dockerfile
@@ -26,7 +26,7 @@ services:
       pull: true
     restart: unless-stopped
     depends_on:
-      - php-fpm
+      - onoh-php-fpm
     networks:
       - onoh
 
