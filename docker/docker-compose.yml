@@ -9,7 +9,7 @@ services:
       - .env
     networks:
       - onoh
-      # - dokploy-network
+      - dokploy-network
     healthcheck:
       test: ["CMD-SHELL", "pidof onoh-php-fpm || exit 1"]
       interval: 10s
