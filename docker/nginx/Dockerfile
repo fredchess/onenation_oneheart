@@ -20,6 +20,10 @@ RUN mkdir -p /var/www/public
 # Cela inclut les assets buildés (/var/www/public/build)
 COPY --from=assets /var/www/public /var/www/public
 
+# Créer le lien symbolique storage (équivalent de php artisan storage:link)
+# Ce lien pointe vers /var/www/storage/app/public qui sera monté via volume partagé
+RUN ln -sfn /var/www/storage/app/public /var/www/public/storage
+
 # Ajuster les permissions
 # Note: On garde les fichiers PHP car Nginx doit pouvoir les lire
 # pour les passer à php-fpm (ils ne sont pas exécutés par Nginx)
