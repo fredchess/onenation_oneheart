@@ -6,6 +6,7 @@ services:
     volumes:
       - storage-app:/var/www/storage/app
       - storage-logs:/var/www/storage/logs
+      - public-storage:/var/www/public/storage
     env_file:
       - .env
     networks:
@@ -26,6 +27,8 @@ services:
         IMAGE_TAG: ${IMAGE_TAG:-latest}
       pull: true
     restart: unless-stopped
+    volumes:
+      - public-storage:/var/www/public/storage
     depends_on:
       - onoh-php-fpm
     networks:
@@ -45,6 +48,7 @@ services:
 volumes:
   storage-app:
   storage-logs:
+  public-storage:
 
 networks:
   onoh:
