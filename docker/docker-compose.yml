@@ -4,14 +4,15 @@ services:
     pull_policy: always
     restart: unless-stopped
     volumes:
-      - storage-data:/var/www/storage
+      - storage-app:/var/www/storage/app
+      - storage-logs:/var/www/storage/logs
     env_file:
       - .env
     networks:
       - onoh
       - dokploy-network
     healthcheck:
-      test: ["CMD-SHELL", "pidof onoh-php-fpm || exit 1"]
+      test: ["CMD-SHELL", "pidof php-fpm || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -42,7 +43,8 @@ services:
       retries: 3
 
 volumes:
-  storage-data:
+  storage-app:
+  storage-logs:
 
 networks:
   onoh:
