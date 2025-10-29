@@ -4,9 +4,9 @@ services:
     pull_policy: always
     restart: unless-stopped
     volumes:
-      - storage-app:/var/www/storage/app
-      - storage-logs:/var/www/storage/logs
-      - public-storage:/var/www/public/storage
+      # - storage-app:/var/www/storage/app
+      # - storage-logs:/var/www/storage/logs
+      - storage-data:/var/www/storage
     env_file:
       - .env
     networks:
@@ -28,7 +28,7 @@ services:
       pull: true
     restart: unless-stopped
     volumes:
-      - public-storage:/var/www/public/storage
+      - storage-data:/var/www/storage
     depends_on:
       - onoh-php-fpm
     networks:
@@ -48,7 +48,6 @@ services:
 volumes:
   storage-app:
   storage-logs:
-  public-storage:
 
 networks:
   onoh:
