@@ -4,8 +4,6 @@ services:
     pull_policy: always
     restart: unless-stopped
     volumes:
-      # - storage-app:/var/www/storage/app
-      # - storage-logs:/var/www/storage/logs
       - storage-data:/var/www/storage
     env_file:
       - .env
@@ -46,8 +44,6 @@ services:
       retries: 3
 
 volumes:
-  # storage-app:
-  # storage-logs:
   storage-data:
 
 networks:
