@@ -46,8 +46,9 @@ services:
       retries: 3
 
 volumes:
-  storage-app:
-  storage-logs:
+  # storage-app:
+  # storage-logs:
+  storage-data:
 
 networks:
   onoh:
