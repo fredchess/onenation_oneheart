@@ -28,7 +28,9 @@ services:
     volumes:
       - storage-data:/var/www/storage
     depends_on:
-      - onoh-php-fpm
+      onoh-php-fpm:
+        condition: service_healthy
+        restart: true
     networks:
       - onoh
 
