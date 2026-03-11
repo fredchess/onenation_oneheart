@@ -7,8 +7,10 @@ use App\Models\Donation;
 use App\Services\Payment\PaymentService;
 use App\Services\Payment\StripeGateway;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Enum;
 use Stripe\StripeClient;
 
@@ -94,33 +96,55 @@ class DonationController extends Controller
 
         $donation->save();
 
-        $transaction_ref = "onoh_{$donation->id}";
-
         if ($request->donate_option == DonationTypeEnum::FINANCIAL->value && $request->payment_mode == 'momo') {
             $url = "https://my-coolpay.com/api/2d851069-b8ce-44c7-8511-4fbf77164cf9/paylink";
 
-            $body = json_encode([
-                "transaction_amount" => $request->amount,
-                "transaction_currency" => "XAF",
-                "transaction_reason" => "Onoh payment",
-                "app_transaction_ref" => $transaction_ref,
-                "customer_phone_number" => $request->tel,
-                "customer_name" => $request->name,
-                "customer_email" => $request->email,
-                "customer_lang" => "fr"
-            ]);
-
             try {
                 $client = new Client();
-                $req = new \GuzzleHttp\Psr7\Request('POST', $url, ['Content-Type' => 'application/json'], $body);
 
-                $response = $client->send($req);
+                $maxAttempts = 3;
 
-                $json = json_decode($response->getBody()->getContents());
+                for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+                    $transactionRef = $this->generateAppTransactionRef($donation->id);
+                    $body = json_encode([
+                        "transaction_amount" => $request->amount,
+                        "transaction_currency" => "XAF",
+                        "transaction_reason" => "Onoh payment",
+                        "app_transaction_ref" => $transactionRef,
+                        "customer_phone_number" => $request->tel,
+                        "customer_name" => $request->name,
+                        "customer_email" => $request->email,
+                        "customer_lang" => "fr"
+                    ]);
 
-                if (!isset($json->payment_url)) return redirect()->back();
+                    try {
+                        $req = new \GuzzleHttp\Psr7\Request('POST', $url, ['Content-Type' => 'application/json'], $body);
+                        $response = $client->send($req);
 
-                return redirect($json->payment_url);
+                        $json = json_decode($response->getBody()->getContents());
+
+                        if (!isset($json->payment_url)) {
+                            return redirect()->back()->with('error', 'Mycoolpay n\'a pas retourné d\'URL de paiement.');
+                        }
+
+                        return redirect($json->payment_url);
+                    } catch (RequestException $requestException) {
+                        $statusCode = $requestException->getResponse()?->getStatusCode();
+                        $responseBody = $requestException->getResponse() ? (string) $requestException->getResponse()->getBody() : '';
+
+                        if (
+                            $statusCode === 409
+                            && str_contains($responseBody, 'Duplicate transaction reference')
+                            && $attempt < $maxAttempts
+                        ) {
+                            continue;
+                        }
+
+                        throw $requestException;
+                    }
+                }
+
+                return redirect()->back()->with('error', 'Impossible d\'initialiser le paiement Mycoolpay après plusieurs tentatives.');
             } catch (\Exception $e) {
                 return redirect()->back()->with('error' ,$e->getMessage());
             }
@@ -284,5 +308,10 @@ class DonationController extends Controller
             $message = "Aucun don n'a été supprimé";
         }
         return redirect()->route("donations.index")->with('success', $message);
+    }
+
+    private function generateAppTransactionRef(int $donationId): string
+    {
+        return sprintf('onoh_%d_%s', $donationId, Str::uuid()->toString());
     }
 }
