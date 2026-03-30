@@ -1,7 +1,7 @@
 # =========================
 # 🌱 Base Laravel (avec PHP & Composer)
 # =========================
-FROM php:8.3-fpm-alpine AS base
+FROM php:8.4-fpm-alpine AS base
 
 WORKDIR /var/www
 
