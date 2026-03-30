@@ -58,7 +58,7 @@ class DonationResource extends Resource
                 TextColumn::make('amount')
                     ->label('Montant')
                     ->money('XAF', locale: 'fr_FR'),
-                TextColumn::make('data.payment_mode')
+                TextColumn::make('payment_mode_label')
                     ->label('Mode de paiement'),
                 TextColumn::make('orphanage.name')
                     ->label('Orphelinat')

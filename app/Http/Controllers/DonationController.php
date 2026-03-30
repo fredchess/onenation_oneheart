@@ -9,6 +9,7 @@ use App\Services\Payment\StripeGateway;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Enum;
@@ -97,7 +98,10 @@ class DonationController extends Controller
         $donation->save();
 
         if ($request->donate_option == DonationTypeEnum::FINANCIAL->value && $request->payment_mode == 'momo') {
-            $url = "https://my-coolpay.com/api/2d851069-b8ce-44c7-8511-4fbf77164cf9/paylink";
+            $url = sprintf(
+                'https://my-coolpay.com/api/%s/paylink',
+                env('MY_COOL_PAY_PUBLIC_KEY', '2d851069-b8ce-44c7-8511-4fbf77164cf9')
+            );
 
             try {
                 $client = new Client();
@@ -126,6 +130,13 @@ class DonationController extends Controller
                         if (!isset($json->payment_url)) {
                             return redirect()->back()->with('error', 'Mycoolpay n\'a pas retourné d\'URL de paiement.');
                         }
+
+                        $datas = $donation->datas ?? [];
+                        $datas['app_transaction_ref'] = $transactionRef;
+                        $datas['mcp_transaction_ref'] = $json->transaction_ref ?? null;
+                        $datas['mcp_transaction_status'] = $json->action ?? 'PENDING';
+                        $donation->datas = $datas;
+                        $donation->save();
 
                         return redirect($json->payment_url);
                     } catch (RequestException $requestException) {
@@ -202,10 +213,22 @@ class DonationController extends Controller
      */
     public function callback_dvXQEdsFNNCcfTYCrvGY(Request $request)
     {
-        // Check transaction status
         $key = env("MY_COOL_PAY_PRIVATE_KEY", null);
 
-        if ($request->ip() != '15.236.140.89' || $key == null) return;
+        if ($key == null) {
+            Log::warning('MyCoolPay callback rejected: missing private key.');
+
+            return response('KO', Response::HTTP_BAD_REQUEST);
+        }
+
+        $allowedIps = ['15.236.140.89'];
+        $requestIps = array_filter(array_merge([$request->ip(), $request->server('REMOTE_ADDR')], $request->ips()));
+
+        if (empty(array_intersect($allowedIps, $requestIps))) {
+            Log::warning('MyCoolPay callback rejected: invalid source IP.', ['ips' => $requestIps]);
+
+            return response('KO', Response::HTTP_FORBIDDEN);
+        }
 
         $siganture = md5(
             $request->transaction_ref
@@ -216,19 +239,49 @@ class DonationController extends Controller
                 . $key
         );
 
-        if ($siganture == $request->signature) {
-            $donation_id = intval(explode('_', $request->app_transaction_ref)[1]);
+        if ($siganture != $request->signature) {
+            Log::warning('MyCoolPay callback rejected: invalid signature.', [
+                'app_transaction_ref' => $request->app_transaction_ref,
+                'transaction_ref' => $request->transaction_ref,
+            ]);
 
-            $donation = Donation::find($donation_id);
-
-            if ($donation && $request->transaction_status == 'SUCCESS') {
-                $donation->status = 1;
-
-                $donation->save();
-
-                return ['message' => 'ok'];
-            }
+            return response('KO', Response::HTTP_FORBIDDEN);
         }
+
+        $donationId = $this->extractDonationIdFromTransactionRef($request->app_transaction_ref);
+
+        if ($donationId === null) {
+            Log::warning('MyCoolPay callback rejected: invalid app transaction ref.', [
+                'app_transaction_ref' => $request->app_transaction_ref,
+            ]);
+
+            return response('KO', Response::HTTP_BAD_REQUEST);
+        }
+
+        $donation = Donation::find($donationId);
+
+        if (! $donation) {
+            Log::warning('MyCoolPay callback rejected: donation not found.', [
+                'donation_id' => $donationId,
+                'app_transaction_ref' => $request->app_transaction_ref,
+            ]);
+
+            return response('KO', Response::HTTP_NOT_FOUND);
+        }
+
+        $datas = $donation->datas ?? [];
+        $datas['app_transaction_ref'] = $request->app_transaction_ref;
+        $datas['mcp_transaction_ref'] = $request->transaction_ref;
+        $datas['mcp_operator_transaction_ref'] = $request->operator_transaction_ref;
+        $datas['mcp_transaction_operator'] = $request->transaction_operator;
+        $datas['mcp_transaction_status'] = $request->transaction_status;
+        $datas['mcp_transaction_message'] = $request->transaction_message;
+
+        $donation->datas = $datas;
+        $donation->status = $request->transaction_status === 'SUCCESS';
+        $donation->save();
+
+        return response('OK', Response::HTTP_OK);
     }
 
     public function callback(Request $request)
@@ -313,5 +366,18 @@ class DonationController extends Controller
     private function generateAppTransactionRef(int $donationId): string
     {
         return sprintf('onoh_%d_%s', $donationId, Str::uuid()->toString());
+    }
+
+    private function extractDonationIdFromTransactionRef(?string $appTransactionRef): ?int
+    {
+        if (! is_string($appTransactionRef)) {
+            return null;
+        }
+
+        if (! preg_match('/^onoh_(\d+)_/', $appTransactionRef, $matches)) {
+            return null;
+        }
+
+        return (int) $matches[1];
     }
 }

@@ -13,6 +13,7 @@ class VerifyCsrfToken extends Middleware
      */
     protected $except = [
         '/admin/blogs/add-image',
-        '/donation/callback'
+        '/donation/callback',
+        '/callback/dvXQEdsFNNCcfTYCrvGY',
     ];
 }
