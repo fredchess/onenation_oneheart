@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\DonationTypeEnum;
+use App\Enums\PaymentStatus;
 use App\Models\Donation;
 use App\Services\Payment\PaymentService;
 use App\Services\Payment\StripeGateway;
@@ -13,9 +14,6 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Enum;
-use Stripe\StripeClient;
-
-use function MongoDB\BSON\toJSON;
 
 class DonationController extends Controller
 {
@@ -60,11 +58,11 @@ class DonationController extends Controller
 
         $donation = new Donation;
 
-        $existing = Donation::query()->where([
-            'status' => false,
-            'datas->email' => $request->email,
-            'orphanage_id' => $request->orphanage_id,
-        ])->first();
+        $existing = Donation::query()
+            ->where('payment_status', PaymentStatus::PENDING)
+            ->where('datas->email', $request->email)
+            ->where('orphanage_id', $request->orphanage_id)
+            ->first();
 
         if ($existing) {
             $donation = $existing;
@@ -82,7 +80,7 @@ class DonationController extends Controller
             ]);
         }
         $donation->amount = ($request->donate_option == DonationTypeEnum::FINANCIAL->value && $request->payment_mode == 'paypal') ? $request->amount_eur * 655 : $request->amount; // Conversion approximative du EUR en XAF lorsque le mode de paiement est PayPal
-        $donation->status = 0;
+        $donation->payment_status = PaymentStatus::PENDING;
         $datas = [
             "name" => $request->name,
             "email" => $request->email,
@@ -202,7 +200,7 @@ class DonationController extends Controller
     public function update_status(Request $request)
     {
         $donation = Donation::find($request->donation_id);
-        $donation->status = $request->status;
+        $donation->payment_status = PaymentStatus::from($request->payment_status);
         $donation->save();
         return redirect()->back()->with("success", "Le don a bien été modifié");
     }
@@ -278,7 +276,7 @@ class DonationController extends Controller
         $datas['mcp_transaction_message'] = $request->transaction_message;
 
         $donation->datas = $datas;
-        $donation->status = $request->transaction_status === 'SUCCESS';
+        $donation->payment_status = $this->mapExternalPaymentStatus($request->transaction_status);
         $donation->save();
 
         return response('OK', Response::HTTP_OK);
@@ -305,8 +303,8 @@ class DonationController extends Controller
             $donation->amount = $request->amount;
         }
 
-        if ($request->status) {
-            $donation->status = $request->status;
+        if ($request->payment_status) {
+            $donation->payment_status = PaymentStatus::from($request->payment_status);
         }
 
         if ($request->name) {
@@ -379,5 +377,14 @@ class DonationController extends Controller
         }
 
         return (int) $matches[1];
+    }
+
+    private function mapExternalPaymentStatus(?string $status): PaymentStatus
+    {
+        return match (strtoupper((string) $status)) {
+            'SUCCESS', 'COMPLETE', 'COMPLETED' => PaymentStatus::SUCCESS,
+            'FAILED', 'FAIL', 'CANCELED', 'CANCELLED', 'EXPIRED' => PaymentStatus::FAILED,
+            default => PaymentStatus::PENDING,
+        };
     }
 }

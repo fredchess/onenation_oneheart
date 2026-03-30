@@ -2,6 +2,7 @@
 
 namespace App\Filament\Exports;
 
+use App\Enums\PaymentStatus;
 use App\Models\Orphanage;
 use Filament\Actions\Exports\ExportColumn;
 use Filament\Actions\Exports\Exporter;
@@ -78,7 +79,7 @@ class OrphanageExporter extends Exporter
                 ->counts('donations'),
             ExportColumn::make('donations_sum_amount')
                 ->label('Total dons')
-                ->sum(['donations' => fn (Builder $query) => $query->where('status', 1)], 'amount')
+                ->sum(['donations' => fn (Builder $query) => $query->where('payment_status', PaymentStatus::SUCCESS)], 'amount')
                 ->default(0),
             ExportColumn::make('created_at')
                 ->label('Rajout'),

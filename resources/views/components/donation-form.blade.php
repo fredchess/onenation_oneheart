@@ -5,7 +5,7 @@
         </div>
         <div class="text section-counter-2">
             <h4 class="countup-">
-                {{ isset($orphelinat) ? number_format($orphelinat->dons->where('status', 1)->sum('amount')) : number_format($total_donations) }}
+                {{ isset($orphelinat) ? number_format($orphelinat->dons->where('payment_status', \App\Enums\PaymentStatus::SUCCESS)->sum('amount')) : number_format($total_donations) }}
                 FCFA</h4>
             <span>Dons récoltés</span>
         </div>

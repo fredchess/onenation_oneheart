@@ -3,10 +3,9 @@
 
 namespace App\Services\Payment;
 
+use App\Enums\PaymentStatus;
 use App\Models\Donation;
-use App\Providers\RouteServiceProvider;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Stripe\StripeClient;
 
 class StripeGateway implements BaseGateway
@@ -49,8 +48,20 @@ class StripeGateway implements BaseGateway
 
         if ( $session != null && $session->status == 'complete') {
             $donation = Donation::find($session->metadata->donation_id);
-            $donation->status = 1;
-            $donation->save();
+
+            if ($donation) {
+                $donation->payment_status = PaymentStatus::SUCCESS;
+                $donation->save();
+            }
+        } elseif ($session != null && isset($session->metadata->donation_id)) {
+            $donation = Donation::find($session->metadata->donation_id);
+
+            if ($donation) {
+                $donation->payment_status = PaymentStatus::FAILED;
+                $donation->save();
+            }
+        } elseif ($session == null) {
+            return;
         }
     }
 }

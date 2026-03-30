@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\PaymentStatus;
 use App\Models\Blog;
 use App\Models\City;
 use App\Models\Donation;
@@ -66,7 +67,7 @@ class PageController extends Controller
         }
 
         // Ne considerer que les dons qui ont ete valides
-        $total_donations = Donation::where('status', 1)->sum("amount");
+        $total_donations = Donation::where('payment_status', PaymentStatus::SUCCESS)->sum("amount");
         $total_cities = count(City::all());
 
         $blogs = Blog::latest()->paginate(9);

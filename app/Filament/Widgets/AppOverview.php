@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Enums\PaymentStatus;
 use App\Enums\UserRoleEnum;
 use App\Models\Donation;
 use App\Models\Orphanage;
@@ -28,7 +29,7 @@ class AppOverview extends BaseWidget
                     $ans = DB::table('donations')
                         ->join('orphanages', 'orphanages.id', '=', 'donations.orphanage_id')
                         ->where('orphanages.responsable_id', $user->id)
-                        ->where('donations.status', true)
+                        ->where('donations.payment_status', PaymentStatus::SUCCESS->value)
                         ->sum('donations.amount') . " FCFA";
 
                     return $ans;
@@ -47,7 +48,7 @@ class AppOverview extends BaseWidget
             })->icon('heroicon-o-home'),
             Stat::make('Dons', function () {
                 return Donation::query()
-                        ->where('status', true)
+                        ->where('payment_status', PaymentStatus::SUCCESS)
                         ->sum('amount') . " FCFA";
             })->icon('heroicon-o-currency-dollar'),
         ];
