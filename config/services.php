@@ -30,4 +30,10 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'mycoolpay' => [
+        'public_key' => env('MY_COOL_PAY_PUBLIC_KEY'),
+        'private_key' => env('MY_COOL_PAY_PRIVATE_KEY'),
+        'allowed_ips' => env('MY_COOL_PAY_ALLOWED_IPS', ''),
+    ],
+
 ];

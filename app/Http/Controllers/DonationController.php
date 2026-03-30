@@ -58,16 +58,6 @@ class DonationController extends Controller
 
         $donation = new Donation;
 
-        $existing = Donation::query()
-            ->where('payment_status', PaymentStatus::PENDING)
-            ->where('datas->email', $request->email)
-            ->where('orphanage_id', $request->orphanage_id)
-            ->first();
-
-        if ($existing) {
-            $donation = $existing;
-        }
-
         if ($request->donate_option == DonationTypeEnum::FINANCIAL->value && $request->payment_mode == 'momo') {
             $request->validate([
                 'tel' => 'required',
@@ -98,7 +88,7 @@ class DonationController extends Controller
         if ($request->donate_option == DonationTypeEnum::FINANCIAL->value && $request->payment_mode == 'momo') {
             $url = sprintf(
                 'https://my-coolpay.com/api/%s/paylink',
-                env('MY_COOL_PAY_PUBLIC_KEY', '2d851069-b8ce-44c7-8511-4fbf77164cf9')
+                config('services.mycoolpay.public_key', env('MY_COOL_PAY_PUBLIC_KEY', '2d851069-b8ce-44c7-8511-4fbf77164cf9'))
             );
 
             try {
@@ -211,7 +201,7 @@ class DonationController extends Controller
      */
     public function callback_dvXQEdsFNNCcfTYCrvGY(Request $request)
     {
-        $key = env("MY_COOL_PAY_PRIVATE_KEY", null);
+        $key = config('services.mycoolpay.private_key', env('MY_COOL_PAY_PRIVATE_KEY'));
 
         if ($key == null) {
             Log::warning('MyCoolPay callback rejected: missing private key.');
@@ -219,11 +209,18 @@ class DonationController extends Controller
             return response('KO', Response::HTTP_BAD_REQUEST);
         }
 
-        $allowedIps = ['15.236.140.89'];
-        $requestIps = array_filter(array_merge([$request->ip(), $request->server('REMOTE_ADDR')], $request->ips()));
+        $allowedIps = collect(explode(',', (string) config('services.mycoolpay.allowed_ips', '')))
+            ->map(fn (string $ip): string => trim($ip))
+            ->filter()
+            ->values()
+            ->all();
+        $requestIps = array_values(array_unique(array_filter(array_merge([$request->ip(), $request->server('REMOTE_ADDR')], $request->ips()))));
 
-        if (empty(array_intersect($allowedIps, $requestIps))) {
-            Log::warning('MyCoolPay callback rejected: invalid source IP.', ['ips' => $requestIps]);
+        if (! empty($allowedIps) && empty(array_intersect($allowedIps, $requestIps))) {
+            Log::warning('MyCoolPay callback rejected: invalid source IP.', [
+                'ips' => $requestIps,
+                'allowed_ips' => $allowedIps,
+            ]);
 
             return response('KO', Response::HTTP_FORBIDDEN);
         }

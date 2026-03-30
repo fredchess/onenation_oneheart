@@ -15,6 +15,7 @@ class DonationCallbackTest extends TestCase
     {
         putenv('MY_COOL_PAY_PRIVATE_KEY=test-private-key');
         $_ENV['MY_COOL_PAY_PRIVATE_KEY'] = 'test-private-key';
+        config()->set('services.mycoolpay.private_key', 'test-private-key');
 
         $donation = new Donation();
         $donation->amount = 5000;
@@ -64,6 +65,7 @@ class DonationCallbackTest extends TestCase
     {
         putenv('MY_COOL_PAY_PRIVATE_KEY=test-private-key');
         $_ENV['MY_COOL_PAY_PRIVATE_KEY'] = 'test-private-key';
+        config()->set('services.mycoolpay.private_key', 'test-private-key');
 
         $donation = new Donation();
         $donation->amount = 5000;
@@ -99,6 +101,7 @@ class DonationCallbackTest extends TestCase
     {
         putenv('MY_COOL_PAY_PRIVATE_KEY=test-private-key');
         $_ENV['MY_COOL_PAY_PRIVATE_KEY'] = 'test-private-key';
+        config()->set('services.mycoolpay.private_key', 'test-private-key');
 
         $donation = new Donation();
         $donation->amount = 5000;
