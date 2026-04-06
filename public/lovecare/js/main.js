@@ -176,11 +176,18 @@
     //Orphanages search
     jQuery(function() {
         $('.selectpicker-city').selectpicker({
-            title: 'Filtrer par ville'
+            title: 'Filtrer par ville',
+            container: 'body',
+            dropupAuto: false,
+            size: 8,
+            liveSearchNormalize: true
         });
 
         $('.selectpicker-age').selectpicker({
-            title: 'Filtrer par tranche d\'age'
+            title: 'Filtrer par tranche d\'age',
+            container: 'body',
+            dropupAuto: false,
+            size: 8
         });
 
         $('.orphanages-cards').slick({

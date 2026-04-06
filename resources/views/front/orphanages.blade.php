@@ -3,8 +3,10 @@
 @section('title', 'Orphelinats')
 @section('content')
 
+    @php($heroBackground = asset('lovecare/images/bg_5.jpg'))
 
-    <section class="hero-wrap hero-wrap-2" style="background-image:  url('{{ asset('lovecare/images/bg_5.jpg') }}');">
+
+    <section class="hero-wrap hero-wrap-2" style="background-image: url('{{ $heroBackground }}');">
         <div class="overlay"></div>
         <div class="container">
             <div class="row no-gutters slider-text align-items-center justify-content-center">
@@ -31,15 +33,15 @@
                         <form action="{{ route('public.orphanages') }}" method="GET" class="search-form">
                             <div class="form-group">
                                 <span class="icon fa fa-search"></span>
-                                <input type="text" name="search" class="form-control" placeholder="Search...">
+                                <input type="text" name="search" class="form-control" placeholder="Search..." value="{{ request('search') }}">
                             </div>
                             <div class="row">
                                 <div class="col-md-6 col-lg-6 col-sm-12 mt-2 mb-2">
                                     <div class="form-group">
-                                        <select name="villes[]" id="cities-select" class="form-control selectpicker-city" multiple data-live-search="true">
+                                        <select name="villes[]" id="cities-select" class="form-control selectpicker-city" multiple data-live-search="true" data-size="8">
                                             <option value="" disabled>Selectionner une ville</option>
                                             @foreach ($villes as $ville)
-                                                <option value="{{ $ville->name }}">{{ $ville->name }}</option>
+                                                <option value="{{ $ville->name }}" @selected(in_array($ville->name, request()->input('villes', [])))>{{ $ville->name }}</option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -47,18 +49,18 @@
                                 <div class="col-md-6 col-lg-6 col-sm-12 mt-2 mb-2">
                                     <div class="form-group">
                                         <span class="icon fas fa-location-dot"></span>
-                                        <input type="text" name="street" class="form-control" placeholder="Quartier">
+                                        <input type="text" name="street" class="form-control" placeholder="Quartier" value="{{ request('street') }}">
                                     </div>
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-md-6 col-lg-6 col-sm-12 mt-2 mb-2">
                                     <div class="form-group">
-                                        <select name="ages[]" id="ages-select" class="form-control selectpicker-age" multiple data-live-search="true">
+                                        <select name="ages[]" id="ages-select" class="form-control selectpicker-age" multiple data-live-search="true" data-size="8">
                                             <option value="" disabled>Selectionner une tranche d'age</option>
-                                            <option value="1">0-6 ans</option>
-                                            <option value="2">7-13 ans</option>
-                                            <option value="3">14-21 ans</option>
+                                            <option value="1" @selected(in_array('1', request()->input('ages', [])))>0-6 ans</option>
+                                            <option value="2" @selected(in_array('2', request()->input('ages', [])))>7-13 ans</option>
+                                            <option value="3" @selected(in_array('3', request()->input('ages', [])))>14-21 ans</option>
                                         </select>
                                     </div>
                                 </div>
@@ -68,11 +70,11 @@
                                     <strong class="mr-2">Trier par</strong> &nbsp;
                                     <select name="sort" id="sort-select">
                                         <option value="">---</option>
-                                        <option value="1">Nombre d'enfants croissant</option>
-                                        <option value="2">Nombre d'enfants décroissant</option>
-                                    </select>
-                                </div>
-                            </div>
+                                         <option value="1" @selected(request('sort') == '1')>Nombre d'enfants croissant</option>
+                                         <option value="2" @selected(request('sort') == '2')>Nombre d'enfants décroissant</option>
+                                     </select>
+                                 </div>
+                             </div>
                             <button type="submit" class="btn btn-primary mt-2">Rechercher</button>
                         </form>
                     </div>
@@ -115,6 +117,10 @@
         }
 
         .items-center { align-items: center }
+
+        .bootstrap-select .dropdown-menu.inner {
+            max-height: 320px !important;
+        }
 
         select{
             height: 50px;
