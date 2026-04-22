@@ -69,10 +69,11 @@
                                 <div class="d-flex flex-end items-center">
                                     <strong class="mr-2">Trier par</strong> &nbsp;
                                     <select name="sort" id="sort-select">
-                                        <option value="">---</option>
-                                         <option value="1" @selected(request('sort') == '1')>Nombre d'enfants croissant</option>
-                                         <option value="2" @selected(request('sort') == '2')>Nombre d'enfants décroissant</option>
-                                     </select>
+                                        <option value="3" @selected(!request('sort') || request('sort') == '3')>Total dons reçus croissant</option>
+                                        <option value="4" @selected(request('sort') == '4')>Total dons reçus décroissant</option>
+                                        <option value="1" @selected(request('sort') == '1')>Nombre d'enfants croissant</option>
+                                        <option value="2" @selected(request('sort') == '2')>Nombre d'enfants décroissant</option>
+                                    </select>
                                  </div>
                              </div>
                             <button type="submit" class="btn btn-primary mt-2">Rechercher</button>

@@ -187,15 +187,20 @@ class PageController extends Controller
             });
         }
 
-        if ($request->input('sort')) {
-            switch ($request->input('sort')) {
-                case 1:
-                    $query->orderBy('data_stats->children_number', 'asc');
-                    break;
-                case 2:
-                    $query->orderBy('data_stats->children_number', 'desc');
-                    break;
-            }
+        $sort = $request->input('sort', '3');
+        switch ($sort) {
+            case 1:
+                $query->orderBy('data_stats->children_number', 'asc');
+                break;
+            case 2:
+                $query->orderBy('data_stats->children_number', 'desc');
+                break;
+            case 4:
+                $query->orderByRaw('(SELECT COALESCE(SUM(amount), 0) FROM donations WHERE orphanage_id = orphanages.id AND payment_status = ?) DESC', ['success']);
+                break;
+            default:
+                $query->orderByRaw('(SELECT COALESCE(SUM(amount), 0) FROM donations WHERE orphanage_id = orphanages.id AND payment_status = ?) ASC', ['success']);
+                break;
         }
     }
 
