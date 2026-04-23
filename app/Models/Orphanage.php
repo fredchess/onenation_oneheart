@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Enums\PaymentStatus;
 use App\Observers\OrphanageObserver;
+use Carbon\Carbon;
 use CyrildeWit\EloquentViewable\Contracts\Viewable;
 use CyrildeWit\EloquentViewable\InteractsWithViews;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
@@ -168,6 +170,35 @@ class Orphanage extends Model implements HasMedia, SpatieSearchable, Viewable
     public function donations(): HasMany
     {
         return $this->hasMany(Donation::class);
+    }
+
+    public function versements(): HasMany
+    {
+        return $this->hasMany(Versement::class);
+    }
+
+    public function getAvailableDonationAmount(): float
+    {
+        $lastSuccessfulVersement = $this->versements()
+            ->where('payment_status', PaymentStatus::SUCCESS->value)
+            ->latest()
+            ->first();
+
+        $resetDateRaw = AppSetting::get('payout_counter_reset_at');
+        $sinceDate = $lastSuccessfulVersement?->created_at
+            ?? ($resetDateRaw ? Carbon::parse($resetDateRaw) : now());
+
+        return (float) $this->donations()
+            ->where('payment_status', PaymentStatus::SUCCESS->value)
+            ->where('created_at', '>', $sinceDate)
+            ->sum('amount');
+    }
+
+    public function hasPendingVersement(): bool
+    {
+        return $this->versements()
+            ->where('payment_status', PaymentStatus::PENDING->value)
+            ->exists();
     }
 
     public function project_categories(): BelongsToMany

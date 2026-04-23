@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Enums\DonationTypeEnum;
 use App\Enums\PaymentStatus;
 use App\Models\Donation;
+use App\Models\Versement;
+use App\Services\MyCoolPayPayoutService;
 use App\Services\Payment\PaymentService;
 use App\Services\Payment\StripeGateway;
 use GuzzleHttp\Client;
@@ -49,7 +51,6 @@ class DonationController extends Controller
      */
     public function store(Request $request)
     {
-
         $request->validate([
             'name' => 'required',
             'email' => 'required|email',
@@ -58,111 +59,108 @@ class DonationController extends Controller
 
         $donation = new Donation;
 
-        if ($request->donate_option == DonationTypeEnum::FINANCIAL->value && $request->payment_mode == 'momo') {
-            $request->validate([
-                'tel' => 'required',
-                'amount' => 'required|numeric'
-            ]);
+        if ($request->donate_option == DonationTypeEnum::FINANCIAL->value) {
+            if ($request->payment_mode == 'momo') {
+                $request->validate([
+                    'tel' => 'required',
+                    'amount' => 'required|numeric',
+                ]);
+                $donation->amount = $request->amount;
+            } else {
+                // card (ou ancien 'paypal' pour rétrocompatibilité)
+                $request->validate([
+                    'amount_card' => 'required|numeric',
+                ]);
+                $donation->amount = $request->amount_card;
+            }
         }
-        elseif ($request->donate_option == DonationTypeEnum::FINANCIAL->value) {
-            $request->validate([
-                'amount_eur' => 'required|numeric'
-            ]);
-        }
-        $donation->amount = ($request->donate_option == DonationTypeEnum::FINANCIAL->value && $request->payment_mode == 'paypal') ? $request->amount_eur * 655 : $request->amount; // Conversion approximative du EUR en XAF lorsque le mode de paiement est PayPal
-        $donation->payment_status = PaymentStatus::PENDING;
-        $datas = [
-            "name" => $request->name,
-            "email" => $request->email,
-            "tel" => $request->tel,
-            "payment_mode" => $request->payment_mode,
-            "donate_option" => $request->donate_option,
-        ];
-        $donation->datas = $datas;
 
-        if ($request->orphanage_id)
+        $donation->payment_status = PaymentStatus::PENDING;
+        $donation->datas = [
+            'name' => $request->name,
+            'email' => $request->email,
+            'tel' => $request->tel,
+            'payment_mode' => $request->payment_mode,
+            'donate_option' => $request->donate_option,
+        ];
+
+        if ($request->orphanage_id) {
             $donation->orphanage_id = $request->orphanage_id;
+        }
 
         $donation->save();
 
-        if ($request->donate_option == DonationTypeEnum::FINANCIAL->value && $request->payment_mode == 'momo') {
-            $url = sprintf(
-                'https://my-coolpay.com/api/%s/paylink',
-                config('services.mycoolpay.public_key', env('MY_COOL_PAY_PUBLIC_KEY', '2d851069-b8ce-44c7-8511-4fbf77164cf9'))
+        if ($request->donate_option == DonationTypeEnum::FINANCIAL->value) {
+            return $this->initiateMyCoolPayPaylink(
+                $donation,
+                $request->payment_mode === 'momo' ? $request->tel : null,
+                $request->name,
+                $request->email
             );
-
-            try {
-                $client = new Client();
-
-                $maxAttempts = 3;
-
-                for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
-                    $transactionRef = $this->generateAppTransactionRef($donation->id);
-                    $body = json_encode([
-                        "transaction_amount" => $request->amount,
-                        "transaction_currency" => "XAF",
-                        "transaction_reason" => "Onoh payment",
-                        "app_transaction_ref" => $transactionRef,
-                        "customer_phone_number" => $request->tel,
-                        "customer_name" => $request->name,
-                        "customer_email" => $request->email,
-                        "customer_lang" => "fr"
-                    ]);
-
-                    try {
-                        $req = new \GuzzleHttp\Psr7\Request('POST', $url, ['Content-Type' => 'application/json'], $body);
-                        $response = $client->send($req);
-
-                        $json = json_decode($response->getBody()->getContents());
-
-                        if (!isset($json->payment_url)) {
-                            return redirect()->back()->with('error', 'Mycoolpay n\'a pas retourné d\'URL de paiement.');
-                        }
-
-                        $datas = $donation->datas ?? [];
-                        $datas['app_transaction_ref'] = $transactionRef;
-                        $datas['mcp_transaction_ref'] = $json->transaction_ref ?? null;
-                        $datas['mcp_transaction_status'] = $json->action ?? 'PENDING';
-                        $donation->datas = $datas;
-                        $donation->save();
-
-                        return redirect($json->payment_url);
-                    } catch (RequestException $requestException) {
-                        $statusCode = $requestException->getResponse()?->getStatusCode();
-                        $responseBody = $requestException->getResponse() ? (string) $requestException->getResponse()->getBody() : '';
-
-                        if (
-                            $statusCode === 409
-                            && str_contains($responseBody, 'Duplicate transaction reference')
-                            && $attempt < $maxAttempts
-                        ) {
-                            continue;
-                        }
-
-                        throw $requestException;
-                    }
-                }
-
-                return redirect()->back()->with('error', 'Impossible d\'initialiser le paiement Mycoolpay après plusieurs tentatives.');
-            } catch (\Exception $e) {
-                return redirect()->back()->with('error' ,$e->getMessage());
-            }
-        } else if ($request->donate_option == DonationTypeEnum::FINANCIAL->value && $request->payment_mode == 'paypal') {
-            try {
-                $paymentService = new PaymentService(new StripeGateway()); // Faire pareil pour MyCollPay
-
-                $donation->amount = $request->amount_eur; // On reprend le montant en EUR
-
-                $url = $paymentService->processPayment($request, $donation);
-
-                return redirect($url);
-            } catch (\Exception $e) {
-                Log::error($e->getMessage(), ['key_from_config' => config('payment.stripe.secret_key'), 'key_from_env' => env('STRIPE_SECRET')]);
-                return redirect()->back()->with("error", $e->getMessage());
-            }
         }
 
-        return redirect()->back()->with("success", "Votre don a bien été enregistré. Nous vous recontacterons afin de finaliser le paiement");
+        return redirect()->back()->with('success', 'Votre don a bien été enregistré. Nous vous recontacterons afin de finaliser le paiement');
+    }
+
+    private function initiateMyCoolPayPaylink(Donation $donation, ?string $phone, string $name, string $email)
+    {
+        $url = sprintf(
+            'https://my-coolpay.com/api/%s/paylink',
+            config('services.mycoolpay.public_key', env('MY_COOL_PAY_PUBLIC_KEY'))
+        );
+
+        try {
+            $client = new Client();
+            $maxAttempts = 3;
+
+            for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+                $transactionRef = $this->generateAppTransactionRef($donation->id);
+                $body = json_encode([
+                    'transaction_amount' => $donation->amount,
+                    'transaction_currency' => 'XAF',
+                    'transaction_reason' => 'Onoh payment',
+                    'app_transaction_ref' => $transactionRef,
+                    'customer_phone_number' => $phone,
+                    'customer_name' => $name,
+                    'customer_email' => $email,
+                    'customer_lang' => 'fr',
+                ]);
+
+                try {
+                    $req = new \GuzzleHttp\Psr7\Request('POST', $url, ['Content-Type' => 'application/json'], $body);
+                    $response = $client->send($req);
+                    $json = json_decode($response->getBody()->getContents());
+
+                    if (! isset($json->payment_url)) {
+                        return redirect()->back()->with('error', "MyCoolPay n'a pas retourné d'URL de paiement.");
+                    }
+
+                    $datas = $donation->datas ?? [];
+                    $datas['app_transaction_ref'] = $transactionRef;
+                    $datas['mcp_transaction_ref'] = $json->transaction_ref ?? null;
+                    $datas['mcp_transaction_status'] = $json->action ?? 'PENDING';
+                    $donation->datas = $datas;
+                    $donation->save();
+
+                    return redirect($json->payment_url);
+
+                } catch (RequestException $requestException) {
+                    $statusCode = $requestException->getResponse()?->getStatusCode();
+                    $responseBody = $requestException->getResponse() ? (string) $requestException->getResponse()->getBody() : '';
+
+                    if ($statusCode === 409 && str_contains($responseBody, 'Duplicate transaction reference') && $attempt < $maxAttempts) {
+                        continue;
+                    }
+
+                    throw $requestException;
+                }
+            }
+
+            return redirect()->back()->with('error', 'Impossible d\'initialiser le paiement MyCoolPay après plusieurs tentatives.');
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
     }
 
     /**
@@ -243,6 +241,13 @@ class DonationController extends Controller
             return response('KO', Response::HTTP_FORBIDDEN);
         }
 
+        $transactionType = strtoupper((string) $request->transaction_type);
+
+        if ($transactionType === 'PAYOUT') {
+            return $this->handlePayoutCallback($request);
+        }
+
+        // Default: PAYIN
         $donationId = $this->extractDonationIdFromTransactionRef($request->app_transaction_ref);
 
         if ($donationId === null) {
@@ -356,6 +361,48 @@ class DonationController extends Controller
             $message = "Aucun don n'a été supprimé";
         }
         return redirect()->route("donations.index")->with('success', $message);
+    }
+
+    private function handlePayoutCallback(Request $request): \Illuminate\Http\Response
+    {
+        $versementId = MyCoolPayPayoutService::extractVersementIdFromTransactionRef($request->app_transaction_ref);
+
+        if ($versementId === null) {
+            Log::warning('MyCoolPay payout callback rejected: invalid app transaction ref.', [
+                'app_transaction_ref' => $request->app_transaction_ref,
+            ]);
+
+            return response('KO', Response::HTTP_BAD_REQUEST);
+        }
+
+        $versement = Versement::find($versementId);
+
+        if (! $versement) {
+            Log::warning('MyCoolPay payout callback rejected: versement not found.', [
+                'versement_id' => $versementId,
+                'app_transaction_ref' => $request->app_transaction_ref,
+            ]);
+
+            return response('KO', Response::HTTP_NOT_FOUND);
+        }
+
+        $datas = $versement->datas ?? [];
+        $datas['mcp_transaction_ref'] = $request->transaction_ref;
+        $datas['mcp_operator_transaction_ref'] = $request->operator_transaction_ref;
+        $datas['mcp_transaction_operator'] = $request->transaction_operator;
+        $datas['mcp_transaction_status'] = $request->transaction_status;
+        $datas['mcp_transaction_message'] = $request->transaction_message;
+
+        $versement->datas = $datas;
+        $versement->payment_status = $this->mapExternalPaymentStatus($request->transaction_status);
+        $versement->save();
+
+        Log::info('MyCoolPay payout callback processed', [
+            'versement_id' => $versementId,
+            'transaction_status' => $request->transaction_status,
+        ]);
+
+        return response('OK', Response::HTTP_OK);
     }
 
     private function generateAppTransactionRef(int $donationId): string

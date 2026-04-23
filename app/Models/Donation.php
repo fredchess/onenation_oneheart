@@ -24,7 +24,8 @@ class Donation extends Model
     {
         return match ($this->datas['payment_mode'] ?? null) {
             'momo' => 'OM / MTN MoMo',
-            'paypal' => 'PayPal / Carte bancaire',
+            'card' => 'Carte bancaire (Visa/Mastercard)',
+            'paypal' => 'Carte bancaire (Visa/Mastercard)', // ancien label, rétrocompatibilité
             default => $this->datas['payment_mode'] ?? null,
         };
     }

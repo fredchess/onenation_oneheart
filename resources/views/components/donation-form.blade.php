@@ -42,18 +42,20 @@
 
             <div id="financial-block" class="mt-3" style="display: block">
                 <div class="col-md-12">
-                    <div class="form-group d-flex" style="flex-wrap: wrap;">
-                        <div class="form-check d-flex" id="mode3_payment">
-                            <input class="form-check-input" type="radio" name="payment_mode" value="paypal"
-                                id="payment_mode1">
-                            <label class="form-check-label" for="payment_mode1">Paypal / Carte
-                                bancaire</label>
-                        </div>
-                        <div class="form-check d-flex ms-3">
-                            <input class="form-check-input" type="radio" name="payment_mode" value="momo"
-                                id="payment_mode3">
-                            <label class="form-check-label" for="payment_mode3">OM / MTN
-                                MoMo</label>
+                    <div class="form-group">
+                        <label class="mb-2">Moyen de paiement</label>
+                        <input type="hidden" name="payment_mode" id="payment_mode_hidden" value="">
+                        <div class="d-flex flex-column gap-2">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input payment-switch" type="checkbox" role="switch"
+                                    id="switch_card" data-mode="card" data-target="payment_mode1-block">
+                                <label class="form-check-label" for="switch_card">Carte bancaire (Visa/Mastercard)</label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input payment-switch" type="checkbox" role="switch"
+                                    id="switch_momo" data-mode="momo" data-target="payment_mode3-block">
+                                <label class="form-check-label" for="switch_momo">OM / MTN MoMo</label>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -77,9 +79,9 @@
             <div id="payment_mode1-block" style="display: none">
                 <div class="col-md-12">
                     <div class="form-group mb-3">
-                        <label for="amount">Montant (en EUR)</label>
-                        <input type="number" name="amount_eur" class="form-control"
-                            placeholder="Montant à donner (en EUR)" id="amount">
+                        <label for="amount_card">Montant (en FCFA)</label>
+                        <input type="number" name="amount_card" class="form-control"
+                            placeholder="Montant à donner (en FCFA)" id="amount_card">
                     </div>
                 </div>
             </div>
@@ -125,16 +127,23 @@
 @section('script')
     <script>
         $(document).ready(function() {
-            $('#payment_mode3, #payment_mode1').on('change', function() {
-                if ($('#payment_mode3').prop('checked') === true) {
-                    $('#payment_mode3-block').show()
-                    $('#payment_mode1-block').hide()
-                } else {
-                    $('#payment_mode3-block').hide()
-                    $('#payment_mode1-block').show()
-                }
+            $('.payment-switch').on('change', function() {
+                var $this = $(this);
 
-            })
+                if ($this.is(':checked')) {
+                    // Désactiver l'autre switch
+                    $('.payment-switch').not($this).prop('checked', false);
+                    // Cacher tous les blocs de saisie
+                    $('#payment_mode1-block, #payment_mode3-block').hide();
+                    // Afficher le bloc correspondant
+                    $('#' + $this.data('target')).show();
+                    // Mettre à jour le champ caché
+                    $('#payment_mode_hidden').val($this.data('mode'));
+                } else {
+                    // Empêcher le décoché si aucun autre n'est sélectionné
+                    $this.prop('checked', true);
+                }
+            });
             $('#select-don').change(function() {
                 if ($('#financial-option').is(':selected')) {
                     $('#financial-block').show()
