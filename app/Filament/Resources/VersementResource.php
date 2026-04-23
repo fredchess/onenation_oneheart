@@ -179,7 +179,6 @@ class VersementResource extends Resource
     {
         return [
             'index' => Pages\ListVersements::route('/'),
-            'create' => Pages\CreateVersement::route('/create'),
         ];
     }
 
