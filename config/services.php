@@ -36,4 +36,9 @@ return [
         'allowed_ips' => env('MY_COOL_PAY_ALLOWED_IPS', ''),
     ],
 
+    'turnstile' => [
+        'site_key' => env('TURNSTILE_SITE_KEY'),
+        'secret_key' => env('TURNSTILE_SECRET_KEY'),
+    ],
+
 ];

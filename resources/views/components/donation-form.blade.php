@@ -117,7 +117,10 @@
             @isset($orphelinat)
                 <input type="hidden" name="orphanage_id" value="{{ $orphelinat->id }}" />
             @endisset
-            <div class="col-md-12 mt-5">
+            <div class="col-md-12 mt-4">
+                @include('components.turnstile-widget', ['theme' => 'light'])
+            </div>
+            <div class="col-md-12 mt-3">
                 <input type="submit" value="Faire mon don" class="btn btn-light py-3 px-4 rounded">
             </div>
         </div>

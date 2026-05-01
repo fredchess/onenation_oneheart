@@ -6,6 +6,7 @@ use App\Enums\DonationTypeEnum;
 use App\Enums\PaymentStatus;
 use App\Models\Donation;
 use App\Models\Versement;
+use App\Rules\ValidTurnstileToken;
 use App\Services\MyCoolPayPayoutService;
 use App\Services\Payment\PaymentService;
 use App\Services\Payment\StripeGateway;
@@ -55,6 +56,7 @@ class DonationController extends Controller
             'name' => 'required',
             'email' => 'required|email',
             'donate_option' => new Enum(DonationTypeEnum::class),
+            'cf-turnstile-response' => [new ValidTurnstileToken()],
         ]);
 
         $donation = new Donation;

@@ -9,6 +9,7 @@ use App\Models\Donation;
 use App\Models\Orphanage;
 use App\Models\Partner;
 use App\Models\User;
+use App\Rules\ValidTurnstileToken;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -225,6 +226,7 @@ class PageController extends Controller
         $request->validate([
             'email' => 'required|email|unique:users',
             'tel' => [new ValidPhoneNumber(Country::CAMEROON)],
+            'cf-turnstile-response' => [new ValidTurnstileToken()],
         ]);
 
         $user = new User;

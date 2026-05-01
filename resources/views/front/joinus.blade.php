@@ -172,7 +172,10 @@
                                     </div>
 
 
-                                    <div class="col-md-12 mt-5">
+                                    <div class="col-md-12 mt-4">
+                                        @include('components.turnstile-widget', ['theme' => 'light'])
+                                    </div>
+                                    <div class="col-md-12 mt-3">
                                         <div class="form-group">
                                             <input type="submit" value="Devenir bénévole" class="btn p-3 px-4 btn-primary">
                                             <div class="submitting"></div>
