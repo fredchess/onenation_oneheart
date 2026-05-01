@@ -3,8 +3,8 @@
 namespace App\Filament\Pages\Auth;
 
 use App\Services\TurnstileService;
-use Filament\Forms\Components\Component;
-use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\View;
 use Filament\Forms\Form;
 use Filament\Http\Responses\Auth\Contracts\LoginResponse;
 use Filament\Pages\Auth\Login as BaseLogin;
@@ -12,27 +12,25 @@ use Illuminate\Validation\ValidationException;
 
 class Login extends BaseLogin
 {
+    protected static ?string $navigationLabel = null;
+
     public function form(Form $form): Form
     {
-        return $form
-            ->schema([
-                $this->getEmailFormComponent(),
-                $this->getPasswordFormComponent(),
-                $this->getTurnstileComponent(),
-            ])
-            ->statePath('data');
-    }
+        $schema = [
+            $this->getEmailFormComponent(),
+            $this->getPasswordFormComponent(),
+        ];
 
-    protected function getTurnstileComponent(): ?Component
-    {
         $turnstile = new TurnstileService();
-
-        if (!$turnstile->isEnabled()) {
-            return null;
+        if ($turnstile->isEnabled()) {
+            $schema[] = View::make('components.turnstile-widget')
+                ->viewData(['theme' => 'light']);
+            $schema[] = Hidden::make('cf-turnstile-response');
         }
 
-        return Component::make()
-            ->view('components.turnstile-widget', ['theme' => 'light']);
+        return $form
+            ->schema($schema)
+            ->statePath('data');
     }
 
     public function authenticate(): ?LoginResponse
@@ -41,8 +39,7 @@ class Login extends BaseLogin
 
         // Valider le token Turnstile si activé
         if ($turnstile->isEnabled()) {
-            $token = request()->input('cf-turnstile-response') ??
-                     request()->input('data.cf-turnstile-response');
+            $token = $this->getFormData()['cf-turnstile-response'] ?? null;
 
             if (empty($token) || !$turnstile->verify($token)) {
                 throw ValidationException::withMessages([
@@ -52,5 +49,10 @@ class Login extends BaseLogin
         }
 
         return parent::authenticate();
+    }
+
+    protected function getFormData(): array
+    {
+        return $this->form->getState();
     }
 }
