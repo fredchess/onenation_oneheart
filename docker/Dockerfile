@@ -1,7 +1,9 @@
 # =========================
 # 🌱 Base Laravel (avec PHP & Composer)
 # =========================
-FROM php:8.4-fpm-alpine AS base
+# Version épinglée : 8.4.27 corrige PHP2Shell (CVE-2026-109618, CVE-2026-109619).
+# Ne pas descendre en dessous ; monter de version pour chaque correctif de sécurité PHP.
+FROM php:8.4.27-fpm-alpine AS base
 
 WORKDIR /var/www
 
