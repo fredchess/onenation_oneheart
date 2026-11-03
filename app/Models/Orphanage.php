@@ -58,6 +58,30 @@ class Orphanage extends Model implements HasMedia, SpatieSearchable, Viewable
         'data_projects' => 'array',
     ];
 
+    /**
+     * Keys of data_needs with their public label.
+     */
+    public const NEEDS = [
+        'food_needs' => 'Alimentaire',
+        'health_needs' => 'Santé & hygiène',
+        'school_needs' => 'Scolarité',
+        'clothes_needs' => 'Vêtements',
+        'ludic_needs' => 'Loisirs',
+        'other_needs' => 'Autres',
+    ];
+
+    /**
+     * Labels of the needs this orphanage has filled in, keyed by data_needs key.
+     */
+    public function filledNeeds(): array
+    {
+        return array_filter(
+            self::NEEDS,
+            fn ($key) => trim(strip_tags($this->data_needs[$key] ?? '')) !== '',
+            ARRAY_FILTER_USE_KEY
+        );
+    }
+
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('profile_images')->singleFile();

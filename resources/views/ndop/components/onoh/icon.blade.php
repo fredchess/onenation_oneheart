@@ -1,0 +1,43 @@
+@props(['name', 'class' => 'size-5'])
+@php
+    $paths = [
+        'arrow-right' => '<path d="M5 12h14M13 6l6 6-6 6"/>',
+        'arrow-up-right' => '<path d="M7 17 17 7M8 7h9v9"/>',
+        'search' => '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+        'pin' => '<path d="M12 21s-7-6.1-7-11.5a7 7 0 0 1 14 0C19 14.9 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/>',
+        'heart' => '<path d="M12 20s-7.5-4.6-9.2-9.4C1.6 7.2 4 4 7.2 4c2 0 3.6 1.1 4.8 2.8C13.2 5.1 14.8 4 16.8 4 20 4 22.4 7.2 21.2 10.6 19.5 15.4 12 20 12 20Z"/>',
+        'users' => '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c2 .7 3.2 2.4 3.5 5.2"/>',
+        'child' => '<circle cx="12" cy="5" r="2.5"/><path d="M12 9v6m0 0-3 6m3-6 3 6M7 11l5-2 5 2"/>',
+        'home' => '<path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/>',
+        'menu' => '<path d="M4 7h16M4 12h16M4 17h10"/>',
+        'close' => '<path d="M6 6l12 12M18 6 6 18"/>',
+        'phone' => '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a1 1 0 0 1-1 1A16 16 0 0 1 4 5a1 1 0 0 1 1-1Z"/>',
+        'mail' => '<rect x="3" y="5" width="18" height="14" rx="1"/><path d="m3 7 9 6 9-6"/>',
+        'globe' => '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3Z"/>',
+        'filter' => '<path d="M4 6h16M7 12h10M10 18h4"/>',
+        'chevron-down' => '<path d="m6 9 6 6 6-6"/>',
+        'chevron-left' => '<path d="m15 6-6 6 6 6"/>',
+        'chevron-right' => '<path d="m9 6 6 6-6 6"/>',
+        'calendar' => '<rect x="3.5" y="5" width="17" height="15" rx="1"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+        'user' => '<circle cx="12" cy="8" r="4"/><path d="M4 21c.8-4.3 4-6.5 8-6.5s7.2 2.2 8 6.5"/>',
+        'check' => '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+        'quote' => '<path d="M10 7H6a2 2 0 0 0-2 2v4h5v5H4m16-11h-4a2 2 0 0 0-2 2v4h5v5h-5"/>',
+        'hand' => '<path d="M7 11V5.5a1.5 1.5 0 0 1 3 0V10m0-1V4.5a1.5 1.5 0 0 1 3 0V10m0-.5V5.5a1.5 1.5 0 0 1 3 0V13m0-3a1.5 1.5 0 0 1 3 0v4a7 7 0 0 1-7 7h-1a7 7 0 0 1-6-3.4L3.3 14a1.6 1.6 0 0 1 2.6-1.8L7 13.5"/>',
+        'handshake' => '<path d="m11 17 2 2a1.4 1.4 0 0 0 2-2m-4-2 2.5 2.5a1.4 1.4 0 0 0 2-2L13 13m-4 2 1 1a1.4 1.4 0 0 0 2-2l-2.5-2.5"/><path d="M2 12 6 8l3 1 3-2 4 1 4 4-3 3M2 12l4 4"/>',
+        'food' => '<path d="M5 3v8a2 2 0 0 0 2 2v8M9 3v8a2 2 0 0 1-2 2M7 3v6M17 21V3c-2 1.5-3 4-3 7v4h3"/>',
+        'health' => '<rect x="3" y="7" width="18" height="13" rx="1"/><path d="M9 7V4h6v3M12 10.5v6M9 13.5h6"/>',
+        'school' => '<path d="M2 9 12 4l10 5-10 5L2 9Z"/><path d="M6 11v5c3.5 2.5 8.5 2.5 12 0v-5M22 9v6"/>',
+        'clothes' => '<path d="M8 3 3 6l2 5 3-1v11h8V10l3 1 2-5-5-3c-.5 1.7-2 3-4 3S8.5 4.7 8 3Z"/>',
+        'play' => '<circle cx="12" cy="12" r="9"/><path d="m10 8.5 5.5 3.5-5.5 3.5Z"/>',
+        'more' => '<circle cx="6" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18" cy="12" r="1.3"/>',
+        'card' => '<rect x="2.5" y="5" width="19" height="14" rx="1.5"/><path d="M2.5 10h19M6 15h4"/>',
+        'mobile' => '<rect x="6.5" y="2.5" width="11" height="19" rx="2"/><path d="M11 18h2"/>',
+        'facebook' => '<path d="M14 8h3V4h-3a4 4 0 0 0-4 4v2H7v4h3v7h4v-7h3l1-4h-4V8Z"/>',
+        'instagram' => '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6" fill="currentColor"/>',
+        'linkedin' => '<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 10v7M8 7v.01M12 17v-4a2 2 0 0 1 4 0v4M12 10v7"/>',
+        'twitter' => '<path d="M4 4l16 16M20 4 4 20" stroke-width="1.6"/>',
+        'whatsapp' => '<path d="M4 20l1.3-4A8.5 8.5 0 1 1 8.4 19L4 20Z"/><path d="M9 8.5c0 3.5 3 6.5 6.5 6.5l1-1.6-2-1-1 .8a4.5 4.5 0 0 1-2.2-2.2l.8-1-1-2L9 8.5Z"/>',
+    ];
+@endphp
+<svg {{ $attributes->merge(['class' => $class]) }} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">{!! $paths[$name] ?? '' !!}</svg>

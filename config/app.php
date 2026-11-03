@@ -58,6 +58,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Redesign preview hosts
+    |--------------------------------------------------------------------------
+    |
+    | Requests served on one of these hosts render the public site with the
+    | views from resources/views/{folder} instead of the legacy theme.
+    | Format: "new.onoh.org=redesign,ndop.onoh.org=ndop".
+    |
+    */
+
+    'preview_hosts' => collect(explode(',', (string) env('PREVIEW_HOSTS', '')))
+        ->map(fn ($pair) => array_map('trim', explode('=', $pair, 2)))
+        ->filter(fn ($pair) => count($pair) === 2 && $pair[0] !== '' && $pair[1] !== '')
+        ->mapWithKeys(fn ($pair) => [strtolower($pair[0]) => $pair[1]])
+        ->all(),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

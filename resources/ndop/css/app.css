@@ -1,0 +1,277 @@
+@import "tailwindcss" source(none);
+@import "@fontsource/barlow/latin-400.css";
+@import "@fontsource/barlow/latin-500.css";
+@import "@fontsource/barlow/latin-600.css";
+@import "@fontsource/barlow/latin-700.css";
+@import "@fontsource/barlow-condensed/latin-700.css";
+@import "@fontsource/barlow-condensed/latin-800.css";
+
+@source "../../views/ndop";
+
+/* Direction « Ndop » : indigo du tissu ndop des Grassfields, corail pour l'action,
+   angles légèrement arrondis, titres condensés en capitales. */
+@theme {
+    --color-indigo: #141a4a;
+    --color-night: #0b0f30;
+    --color-coral: #e8423f;
+    --color-coral-deep: #cc3431;
+    --color-sky: #a9b7ff;
+    --color-paper: #f5f6fb;
+    --color-tab: #eceef5;
+    --color-rule: #dfe2ef;
+    --color-ink: #10143a;
+    --color-slate: #596080;
+
+    --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+    --font-sans: "Barlow", "Segoe UI", system-ui, sans-serif;
+
+    --radius-ui: 4px;
+    --radius-box: 6px;
+    --ease-out-soft: cubic-bezier(.22, 1, .36, 1);
+}
+
+@utility btn {
+    @apply inline-flex min-h-12 items-center justify-center gap-2.5 rounded-ui px-6 text-sm font-bold uppercase tracking-[.06em] transition-colors duration-200;
+}
+
+@layer base {
+    html {
+        -webkit-tap-highlight-color: transparent;
+        scroll-behavior: smooth;
+        scroll-padding-top: 6rem;
+    }
+
+    body {
+        @apply bg-white font-sans text-base text-ink antialiased;
+    }
+
+    h1, h2, h3 {
+        text-wrap: balance;
+    }
+
+    :focus-visible {
+        outline: 3px solid var(--color-coral);
+        outline-offset: 2px;
+    }
+
+    [x-cloak] {
+        display: none !important;
+    }
+}
+
+@layer components {
+    .wrap {
+        @apply mx-auto w-full max-w-[1180px];
+        padding-left: max(1.125rem, env(safe-area-inset-left, 0px));
+        padding-right: max(1.125rem, env(safe-area-inset-right, 0px));
+    }
+
+    @media (min-width: 768px) {
+        .wrap {
+            padding-left: max(2.5rem, env(safe-area-inset-left, 0px));
+            padding-right: max(2.5rem, env(safe-area-inset-right, 0px));
+        }
+    }
+
+    .display {
+        @apply font-display font-extrabold uppercase leading-[.95] tracking-[.01em];
+    }
+
+    /* Motif ndop : losanges, points et croisillons */
+    .ndop {
+        background-color: var(--color-indigo);
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40' fill='none' stroke='%23ffffff' stroke-opacity='.2' stroke-width='1.6'%3E%3Cpath d='M20 6 34 20 20 34 6 20Z'/%3E%3Ccircle cx='20' cy='20' r='2.6' fill='%23ffffff' fill-opacity='.28' stroke='none'/%3E%3Cpath d='M0 0l6 6M40 0l-6 6M0 40l6-6M40 40l-6-6'/%3E%3C/svg%3E");
+        background-size: 40px 40px;
+    }
+
+    /* Bordure de pagne (triangles) */
+    .band {
+        height: 14px;
+        background-color: var(--color-indigo);
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='14' viewBox='0 0 20 14'%3E%3Cpath d='M0 14 10 3 20 14Z' fill='%23ffffff' fill-opacity='.85'/%3E%3C/svg%3E");
+        background-size: 20px 14px;
+        background-repeat: repeat-x;
+    }
+
+    .btn-coral {
+        @apply btn bg-coral text-white hover:bg-coral-deep;
+    }
+
+    .btn-indigo {
+        @apply btn bg-indigo text-white hover:bg-night;
+    }
+
+    .btn-outline {
+        @apply btn shadow-[inset_0_0_0_2px_currentColor] hover:bg-white/10;
+    }
+
+    .btn-white {
+        @apply btn bg-white text-indigo hover:bg-paper;
+    }
+
+    .link {
+        @apply inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[.06em] text-coral;
+    }
+
+    /* Seule la flèche bouge au survol, jamais la carte */
+    .arrow {
+        @apply size-[18px] shrink-0 transition-transform duration-300 ease-out-soft;
+    }
+
+    :is(a, button, .group):hover > .arrow,
+    :is(a, button):hover .arrow,
+    .group:hover .arrow,
+    :is(a, button):focus-visible .arrow {
+        transform: translateX(5px);
+    }
+
+    .label {
+        @apply mb-1.5 block text-[11px] font-bold uppercase tracking-[.12em] text-slate;
+    }
+
+    .field {
+        @apply block min-h-12 w-full rounded-ui border border-rule bg-white px-3.5 py-2.5 text-[15px] text-ink placeholder:text-slate/60 transition-colors focus:border-indigo focus:outline-none focus:ring-2 focus:ring-indigo/15;
+    }
+
+    select.field {
+        @apply appearance-none bg-no-repeat pr-10;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23141a4a' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+        background-position: right .8rem center;
+        background-size: 1.05rem;
+    }
+
+    .chip {
+        @apply relative inline-flex min-h-10 cursor-pointer select-none items-center rounded-ui border border-rule bg-white px-3 text-sm font-medium text-ink transition-colors hover:border-indigo;
+    }
+
+    .chip:has(input:checked) {
+        @apply border-indigo bg-indigo text-white;
+    }
+
+    .chip:has(input:focus-visible) {
+        outline: 3px solid var(--color-coral);
+        outline-offset: 2px;
+    }
+
+    .chip input {
+        @apply sr-only;
+    }
+
+    /* Onglets façon shadcn */
+    .tablist {
+        @apply grid grid-cols-2 gap-1 rounded-lg bg-tab p-1;
+    }
+
+    .tab {
+        @apply h-10 rounded-md text-sm font-semibold text-slate transition;
+    }
+
+    .tab[aria-selected="true"] {
+        @apply bg-white text-ink shadow-[0_1px_3px_rgba(16,20,58,.14),0_1px_1px_rgba(16,20,58,.06)];
+    }
+
+    .mark {
+        @apply rounded-[3px] px-1.5 py-[5px] text-[10px] font-extrabold leading-none tracking-[.04em] whitespace-nowrap;
+    }
+
+    .photo {
+        @apply overflow-hidden rounded-box bg-paper;
+    }
+
+    .photo img {
+        @apply size-full object-cover;
+    }
+
+    /* Contenu riche saisi dans l'admin */
+    .rich {
+        @apply text-[1.0625rem] leading-[1.75] text-ink/85;
+    }
+
+    .rich > * + * {
+        margin-top: 1em;
+    }
+
+    .rich h1, .rich h2, .rich h3, .rich h4 {
+        @apply font-display font-extrabold uppercase leading-none text-indigo;
+        margin-top: 1.6em;
+    }
+
+    .rich h1, .rich h2 { font-size: 2rem; }
+    .rich h3, .rich h4 { font-size: 1.5rem; }
+
+    .rich a {
+        @apply font-semibold text-indigo underline decoration-coral decoration-2 underline-offset-4;
+    }
+
+    .rich ul { @apply list-disc space-y-1 pl-6 marker:text-coral; }
+    .rich ol { @apply list-decimal space-y-1 pl-6 marker:text-coral; }
+
+    .rich img {
+        @apply h-auto max-w-full rounded-box;
+    }
+
+    .rich iframe {
+        @apply aspect-video h-auto w-full rounded-box;
+    }
+
+    .rich blockquote {
+        @apply border-l-4 border-coral pl-5 text-indigo;
+    }
+}
+
+/* Apparition au défilement : visible sans JS, masqué seulement quand le script est prêt */
+@media (prefers-reduced-motion: no-preference) {
+    .reveal-ready [data-reveal] {
+        opacity: 0;
+        transform: translateY(16px);
+        transition: opacity .7s var(--ease-out-soft), transform .7s var(--ease-out-soft);
+        transition-delay: var(--delay, 0ms);
+    }
+
+    .reveal-ready [data-reveal].is-in {
+        opacity: 1;
+        transform: none;
+    }
+
+    .fade-up {
+        animation: fade-up .8s var(--ease-out-soft) both;
+        animation-delay: var(--delay, 0ms);
+    }
+}
+
+/* Bannière principale : zoom lent sur la photo active, pilule qui se remplit */
+@media (prefers-reduced-motion: no-preference) {
+    .hero-slide img {
+        transform: scale(1.06);
+        transition: transform 7s linear;
+    }
+
+    .hero-slide.is-active img {
+        transform: scale(1);
+    }
+
+    .pill-run {
+        animation: pill-fill var(--pill-duration, 6000ms) linear forwards;
+    }
+
+    .is-paused .pill-run {
+        animation-play-state: paused;
+    }
+}
+
+/* Sans animation : pas de défilement automatique, la pilule active est pleine */
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .arrow { transition: none; }
+    .pill-run { width: 100%; }
+}
+
+@keyframes pill-fill {
+    from { width: 0; }
+    to { width: 100%; }
+}
+
+@keyframes fade-up {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: none; }
+}

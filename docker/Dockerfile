@@ -60,6 +60,21 @@ RUN cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
 
 
 # =========================
+# 🎨 Assets du nouveau site public (Vite + Tailwind)
+# =========================
+FROM node:22-alpine AS assets
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
+
+COPY vite.config.mjs ./
+COPY resources ./resources
+RUN npm run redesign:build
+
+
+# =========================
 # 🧩 Backend — installation Composer
 # =========================
 FROM base AS backend
@@ -75,6 +90,9 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-di
 
 # Copier le reste du code source
 COPY . .
+
+# Assets compilés (public/build/manifest.json lu par @vite)
+COPY --from=assets /app/public/build ./public/build
 
 # Finaliser le chargement
 RUN composer run-script post-autoload-dump \

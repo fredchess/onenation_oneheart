@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Enums\PaymentStatus;
+use App\Models\AppSetting;
 use App\Models\Blog;
 use App\Models\City;
 use App\Models\Donation;
 use App\Models\Orphanage;
 use App\Models\Partner;
+use App\Models\TeamMember;
 use App\Models\User;
 use App\Rules\ValidTurnstileToken;
 use Exception;
@@ -85,8 +87,10 @@ class PageController extends Controller
     public function about(Request $request)
     {
         $users = User::all();
+        $team = TeamMember::visible()->with('media')->get();
+        $teamDisplay = AppSetting::get('team_display', 'grid');
 
-        return view('front.about', compact('users'));
+        return view('front.about', compact('users', 'team', 'teamDisplay'));
     }
 
     public function blog(Request $request)
@@ -142,7 +146,8 @@ class PageController extends Controller
                 'street' => $request->input('street'),
                 'sort' => $request->input('sort'),
                 'villes' => $request->input('villes', []),
-                'ages' => $request->input('ages', [])]);
+                'ages' => $request->input('ages', []),
+                'besoins' => $request->input('besoins', [])]);
 
             return view('front.orphanages', compact('orphelinats', 'villes'));
         } catch (Exception $e) {
@@ -152,15 +157,15 @@ class PageController extends Controller
 
     private function applyOrphanageFilters(Builder $query, Request $request): void
     {
-        $query->where('status', 1);
+        $query->where('status', 1)->with(['city', 'dons']);
 
         if ($request->filled('street') && $request->filled('search')) {
             $query->where('name', 'like', '%'.$request->input('search').'%');
         }
 
-        if ($request->villes != null) {
-            $cities = $request->villes;
+        $cities = array_filter((array) $request->villes);
 
+        if ($cities) {
             $query->whereIn('city_id', function ($subQuery) use ($cities) {
                 $subQuery->select('id')
                     ->from('cities')
@@ -184,6 +189,19 @@ class PageController extends Controller
                             $ageQuery->orWhere('orphanages.data_stats->children_number_14_21', '>', 0);
                             break;
                     }
+                }
+            });
+        }
+
+        $needs = array_intersect((array) $request->besoins, array_keys(Orphanage::NEEDS));
+
+        if ($needs) {
+            $query->where(function ($needsQuery) use ($needs) {
+                foreach ($needs as $need) {
+                    $needsQuery->orWhere(function ($needQuery) use ($need) {
+                        $needQuery->whereNotNull("orphanages.data_needs->{$need}")
+                            ->where("orphanages.data_needs->{$need}", '!=', '');
+                    });
                 }
             });
         }
