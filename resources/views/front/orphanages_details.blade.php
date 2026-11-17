@@ -1,345 +1,184 @@
 @extends('front.layouts.app')
 
-@section('title', $orphelinat->name)
+@php
+    $identity = $orphelinat->data_identity ?? [];
+    $stats = $orphelinat->data_stats ?? [];
+    $education = $orphelinat->data_education ?? [];
+    $needsData = $orphelinat->data_needs ?? [];
+    $address = $orphelinat->data_address ?? [];
+    $promoter = $orphelinat->data_identity_promoter ?? [];
+    $cover = $orphelinat->getFirstMediaUrl('profile_images');
+    $phone = $promoter['promoter_phone'] ?? ($orphelinat->responsable->datas['tel'] ?? null);
+    $website = $identity['website'] ?? null;
+    $map = $address['google_address'] ?? '';
+    $needTitles = [
+        'food_needs' => 'Besoins alimentaires',
+        'health_needs' => 'Besoins sanitaires & hygiéniques',
+        'school_needs' => 'Besoins scolaires',
+        'clothes_needs' => 'Besoins vestimentaires',
+        'ludic_needs' => 'Besoins ludiques',
+        'other_needs' => 'Autres besoins',
+    ];
+    $filledNeeds = $orphelinat->filledNeeds();
+    $ageBands = [
+        '0 – 6 ans' => (int) ($stats['children_number_0_6'] ?? 0),
+        '7 – 13 ans' => (int) ($stats['children_number_7_13'] ?? 0),
+        '14 – 21 ans' => (int) ($stats['children_number_14_21'] ?? 0),
+    ];
+    $ageMax = max(1, max($ageBands));
+@endphp
 
+@section('title', $orphelinat->name)
 @section('meta_title', $orphelinat->name)
-@section('meta_description', $orphelinat->data_identity['history'] ?? '')
+@section('meta_description', Str::limit(strip_tags($identity['history'] ?? ($identity['mini_description'] ?? '')), 160))
 @section('meta_url', route('public.orphanages.details', ['orphanage_slug' => $orphelinat->slug]))
-@section('meta_image', $orphelinat->getFirstMediaUrl('profile_images'))
+@section('meta_image', $cover)
+@section('donate_anchor', '#donate')
 
 @section('content')
+    @include('front.partials.page-hero', [
+        'title' => $identity['name'] ?? $orphelinat->name,
+        'crumbs' => ['Orphelinats' => route('public.orphanages'), $orphelinat->name => null],
+        'image' => $cover ?: \App\Support\SiteImages::fallbackUrl($orphelinat->id, 1080),
+        'fallback' => \App\Support\SiteImages::fallbackUrl($orphelinat->id, 1080),
+    ])
 
-    <section class="hero-wrap hero-wrap-2" style="background-image: url('{{ $orphelinat->getFirstMediaUrl('profile_images') }}');">
-        <div class="overlay"></div>
-        <div class="container">
-            <div class="row no-gutters slider-text align-items-center justify-content-center">
-                <div class="col-md-9 text-center">
-                    <p class="breadcrumbs"><span class="me-2"><a href="{{ route('public.home') }}">Accueil <i
-                                    class="fa fa-chevron-right"></i></a></span> <span class="me-2"><a
-                                href="{{ route('public.orphanages') }}">Orphelinats <i
-                                    class="fa fa-chevron-right"></i></a></span> </p>
-                    <h1 class="mb-0 bread">{{ $orphelinat->data_identity['name'] }}</h1>
-                </div>
+    {{-- Infos utiles --}}
+    <section class="ndop text-white">
+        <dl class="wrap grid grid-cols-2 lg:grid-cols-4">
+            <div class="border-white/12 py-5 pr-4 lg:border-r lg:py-6">
+                <dt class="text-xs font-bold uppercase tracking-[.12em] text-sky">Enfants</dt>
+                <dd class="mt-1 font-display text-4xl font-extrabold tabular-nums">{{ $stats['children_number'] ?? 0 }}</dd>
             </div>
-        </div>
+            @php($location = collect([$orphelinat->city->name ?? null, trim(strip_tags($address['localisation'] ?? ''))])->filter()->join(' · '))
+            <div class="min-w-0 border-white/12 py-5 pl-4 lg:border-r lg:px-6 lg:py-6">
+                <dt class="text-xs font-bold uppercase tracking-[.12em] text-sky">Localisation</dt>
+                {{-- Certaines adresses sont de longues descriptions : 3 lignes maximum, texte complet au survol --}}
+                <dd class="mt-1.5 line-clamp-3 break-words font-semibold" title="{{ $location }}">{{ $location }}</dd>
+            </div>
+            <div class="min-w-0 border-t border-white/12 py-5 pr-4 lg:border-r lg:border-t-0 lg:px-6 lg:py-6">
+                <dt class="text-xs font-bold uppercase tracking-[.12em] text-sky">Téléphone</dt>
+                <dd class="mt-1.5 font-semibold">
+                    @if ($phone)<a href="tel:{{ preg_replace('/\s+/', '', $phone) }}" class="hover:underline">{{ $phone }}</a>@else<span class="text-sky">Non communiqué</span>@endif
+                    @if (!empty($promoter['second_phone']))<br><a href="tel:{{ preg_replace('/\s+/', '', $promoter['second_phone']) }}" class="hover:underline">{{ $promoter['second_phone'] }}</a>@endif
+                </dd>
+            </div>
+            <div class="border-t border-white/12 py-5 pl-4 lg:border-t-0 lg:px-6 lg:py-6">
+                <dt class="text-xs font-bold uppercase tracking-[.12em] text-sky">Site web</dt>
+                <dd class="mt-1.5 font-semibold">
+                    @if ($website)
+                        <a href="{{ str_starts_with($website, 'http') ? $website : 'http://' . $website }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 hover:underline">Visiter <x-onoh.icon name="arrow-up-right" class="size-4" /></a>
+                    @else
+                        <span class="text-sky">Aucun</span>
+                    @endif
+                </dd>
+            </div>
+        </dl>
     </section>
-    @if (request()->input('success') == 'true')
-        <div class="info-donation py-2 px-5 m-auto mt-1 text-center" style="width: max-content; background-color: #3d8601; color: #fff">Payment effectué avec succes</div>
-    @endif
-    @if (request()->input('success') == 'false')
-        <div class="info-donation py-2 px-5 m-auto mt-1 text-center" style="width: max-content; background-color: #db4d65; color: #fff">Le payment n'a pas été effectué</div>
-    @endif
-    @if(session('error'))
-        <div class="info-donation-persist py-2 px-5 m-auto mt-1 text-center" style="width: max-content; background-color: #db4d65; color: #fff">{{ session('error') }}</div>
-    @endif
 
-    <section class="ftco-section">
-        <div class="container">
-            <div class="row g-lg-5">
-                <div class="col-lg-8">
-                    <div class="content">
-                        <div class="infos-utiles p-5">
-                            <ul>
-                                <li>{{ $orphelinat->data_stats['children_number'] }} enfants</li>
-                                <li>{{ $orphelinat->data_address['localisation'] ?? '' }} ({{ $orphelinat->city->name }})</li>
-                                <li>{{ $orphelinat->data_identity_promoter['promoter_phone'] ?? ($orphelinat->responsable->datas['tel'] ?? null) }} / {{$orphelinat->data_identity_promoter['second_phone'] ?? '' }}</li>
-                                @if($orphelinat->data_identity['website'])
-                                    <li>
-                                        <a href="{{ (strpos($orphelinat->data_identity['website'], 'http') === 0) ? $orphelinat->data_identity['website'] : 'http://' . $orphelinat->data_identity['website'] }}" target="_blank">Site web
-                                            <span>
-                                                <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                                            </span>
-                                        </a>
-                                    </li>
-                                @endif
-                            </ul>
-                        </div>
-                        <div class="description mt-5">
-                            {!! $orphelinat->data_identity['description'] ?? '' !!}
-                        </div>
-                        @if($orphelinat->data_identity['history'])
-                            <div class="histoire mt-5">
-                                <div class="title">
-                                    <h1 style="color: #0313A0; text-transform: uppercase">Histoire de l'orphelinat</h1>
-                                    <div class="mt-5 histoire-content">
-                                        {!! $orphelinat->data_identity['history'] !!}
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
-                        @if ($orphelinat->data_needs)
-                            <div class="besoins mt-5">
-                                <div class="title">
-                                    <h1 style="color: #0313A0; text-transform: uppercase">Besoins de l'orphelinat</h1>
-                                    <div class="ml-4" style="margin-left: 1.5rem">
-                                        @if ($orphelinat->data_needs['food_needs'])
-                                            <div class="mt-5 food-needs-content">
-                                                <h3 style="color: #0313A0; text-transform: uppercase">Besoins alimentaires</h3>
-                                                    <div class="mt-5 histoire-content">
-                                                        {!! $orphelinat->data_needs['food_needs'] !!}
-                                                    </div>
-                                            </div>
-                                        @endif
-                                        @if ($orphelinat->data_needs['health_needs'])
-                                            <div class="mt-5 food-needs-content">
-                                                <h3 style="color: #0313A0; text-transform: uppercase">Besoins sanitaires & hygiéniques</h3>
-                                                    <div class="mt-5 histoire-content">
-                                                        {!! $orphelinat->data_needs['health_needs'] !!}
-                                                    </div>
-                                            </div>
-                                        @endif
-                                        @if ($orphelinat->data_needs['school_needs'])
-                                            <div class="mt-5 food-needs-content">
-                                                <h3 style="color: #0313A0; text-transform: uppercase">Besoins scolaires</h3>
-                                                    <div class="mt-5 histoire-content">
-                                                        {!! $orphelinat->data_needs['school_needs'] !!}
-                                                    </div>
-                                            </div>
-                                        @endif
-                                        @if ($orphelinat->data_needs['clothes_needs'])
-                                            <div class="mt-5 food-needs-content">
-                                                <h3 style="color: #0313A0; text-transform: uppercase">Besoins vestimentaires</h3>
-                                                    <div class="mt-5 histoire-content">
-                                                        {!! $orphelinat->data_needs['clothes_needs'] !!}
-                                                    </div>
-                                            </div>
-                                        @endif
-                                        @if ($orphelinat->data_needs['ludic_needs'])
-                                            <div class="mt-5 food-needs-content">
-                                                <h3 style="color: #0313A0; text-transform: uppercase">Besoins ludiques</h3>
-                                                    <div class="mt-5 histoire-content">
-                                                        {!! $orphelinat->data_needs['ludic_needs'] !!}
-                                                    </div>
-                                            </div>
-                                        @endif
-                                        @if ($orphelinat->data_needs['other_needs'])
-                                            <div class="mt-5 food-needs-content">
-                                                <h3 style="color: #0313A0; text-transform: uppercase">Autres besoins</h3>
-                                                    <div class="mt-5 histoire-content">
-                                                        {!! $orphelinat->data_needs['other_needs'] !!}
-                                                    </div>
-                                            </div>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
-                        @if( array_key_exists("withonoh", $orphelinat->data_identity))
-                            @if($orphelinat->data_identity['withonoh'] != null)
-                                <div class="withonoh mt-5">
-                                    <div class="title">
-                                        <h1 style="color: #0313A0; text-transform: uppercase">L'orphelinat et ONOH</h1>
-                                        <div class="mt-5 withonoh-content">
-                                            {!! $orphelinat->data_identity['withonoh'] !!}
-                                        </div>
-                                    </div>
-                                </div>
-                            @endif
-                        @endif
+    <div class="wrap grid gap-12 py-12 lg:grid-cols-[minmax(0,1fr)_25rem] lg:gap-14 lg:py-16">
+        <div class="min-w-0 space-y-14">
+            <a href="#donate" class="btn-coral w-full lg:hidden">Faire un don à cet orphelinat</a>
+
+            @if (!empty($identity['description']))
+                <section class="rich" data-reveal>{!! $identity['description'] !!}</section>
+            @endif
+
+            @if (!empty($identity['history']))
+                <section data-reveal>
+                    @include('front.partials.section-title', ['title' => "Histoire de l'orphelinat"])
+                    <div class="rich">{!! $identity['history'] !!}</div>
+                </section>
+            @endif
+
+            @if ($filledNeeds)
+                <section>
+                    @include('front.partials.section-title', ['title' => "Besoins de l'orphelinat", 'text' => 'Ce dont la structure a besoin aujourd\'hui. Votre don financier sert à couvrir ces besoins.'])
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        @foreach ($filledNeeds as $key => $label)
+                            <article class="rounded-box border border-rule p-5" data-reveal style="--delay: {{ $loop->index * 60 }}ms">
+                                <h3 class="display text-2xl text-indigo">{{ $needTitles[$key] }}</h3>
+                                <div class="rich mt-2 text-[15px]">{!! $needsData[$key] !!}</div>
+                            </article>
+                        @endforeach
                     </div>
-                </div> <!-- .col-md-8 -->
-                <div class="col-lg-4 sidebar pl-md-4">
-                    <div class="sidebar-box">
-                        <h3>Informations complémentaires</h3>
-                        <div class="form-body">
-                            <div class="row">
-                                <div class="accordion" id="accordionExample">
-                                    <div class="accordion-item">
-                                        <h2 class="accordion-header" id="heading1">
-                                            <button class="accordion-button collapsed" type="button"
-                                                data-bs-toggle="collapse" data-bs-target="#collapse1" aria-expanded="false"
-                                                aria-controls="collapseOne">
-                                                Promoteur
-                                                <i class="bi bi-caret-down" style="padding: 2px"></i>
-                                            </button>
-                                        </h2>
-                                        <div id="collapse1" class="accordion-collapse collapse" aria-labelledby="heading1"
-                                            data-bs-parent="#accordionExample">
-                                            <div class="accordion-body">
-                                                <div class="container p-20">
-                                                    <strong>Nom du promoteur : </strong>
-                                                    <span>{{ $orphelinat->responsable->name ?? ($orphelinat->data_identity_promoter['promoter_name'] ?? '') }}</span>
-                                                </div>
-                                            </div>
+                </section>
+            @endif
+
+            @if (!empty($identity['withonoh']))
+                <section class="ndop rounded-box p-7 text-white sm:p-9" data-reveal>
+                    <h2 class="display text-[2.4rem]">L'orphelinat et ONOH</h2>
+                    <div class="rich mt-4 text-white/90 [&_a]:text-white">{!! $identity['withonoh'] !!}</div>
+                </section>
+            @endif
+
+            {{-- Informations complémentaires (anciens accordéons) --}}
+            <section>
+                @include('front.partials.section-title', ['title' => 'Informations complémentaires'])
+                <div class="divide-y divide-rule border-y border-rule" x-data="{ open: 'stats' }">
+                    @php($promoterName = $orphelinat->responsable->name ?? ($promoter['promoter_name'] ?? null))
+                    @foreach ([
+                        'promoter' => 'Promoteur',
+                        'stats' => 'Statistiques',
+                        'education' => 'Éducation',
+                    ] as $panel => $label)
+                        <div>
+                            <button type="button" class="flex w-full items-center justify-between py-4 text-left font-display text-2xl font-extrabold uppercase text-indigo"
+                                    @click="open = open === '{{ $panel }}' ? null : '{{ $panel }}'" :aria-expanded="(open === '{{ $panel }}').toString()" aria-controls="panel-{{ $panel }}">
+                                {{ $label }}
+                                <x-onoh.icon name="chevron-down" class="size-5 transition-transform duration-300" ::class="open === '{{ $panel }}' && 'rotate-180'" />
+                            </button>
+                            <div id="panel-{{ $panel }}" x-show="open === '{{ $panel }}'" x-collapse x-cloak>
+                                <div class="pb-6">
+                                    @if ($panel === 'promoter')
+                                        <p><span class="text-slate">Nom du promoteur :</span> <strong class="text-indigo">{{ $promoterName ?: 'Non communiqué' }}</strong></p>
+                                    @elseif ($panel === 'stats')
+                                        <div class="grid gap-6 sm:grid-cols-2" x-data="{ on: false }" x-intersect.once="on = true">
+                                            <ul class="space-y-3.5">
+                                                @foreach ($ageBands as $band => $value)
+                                                    <li>
+                                                        <p class="flex justify-between text-sm"><span class="text-slate">{{ $band }}</span><b class="tabular-nums text-indigo">{{ $value }}</b></p>
+                                                        <div class="mt-1.5 h-2 overflow-hidden rounded-full bg-paper"><i class="block h-full rounded-full bg-indigo transition-[width] duration-1000 ease-out-soft" :style="on ? 'width: {{ round($value / $ageMax * 100) }}%' : 'width: 0'"></i></div>
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                            <dl class="grid grid-cols-2 gap-4 self-start">
+                                                <div class="rounded-box bg-paper p-4"><dt class="text-sm text-slate">Garçons</dt><dd class="font-display text-3xl font-extrabold tabular-nums text-indigo">{{ $stats['boys_number'] ?? 0 }}</dd></div>
+                                                <div class="rounded-box bg-paper p-4"><dt class="text-sm text-slate">Filles</dt><dd class="font-display text-3xl font-extrabold tabular-nums text-indigo">{{ $stats['girls_number'] ?? 0 }}</dd></div>
+                                            </dl>
                                         </div>
-                                    </div>
-                                    <div class="accordion-item">
-                                        <h2 class="accordion-header" id="heading2">
-                                            <button class="accordion-button collapsed" type="button"
-                                                data-bs-toggle="collapse" data-bs-target="#collapse2" aria-expanded="false"
-                                                aria-controls="collapseOne">
-                                                Statistiques
-                                                <i class="bi bi-caret-down" style="padding: 2px"></i>
-                                            </button>
-                                        </h2>
-                                        <div id="collapse2" class="accordion-collapse collapse" aria-labelledby="heading2"
-                                            data-bs-parent="#accordionExample">
-                                            <div class="accordion-body">
-                                                <div class="container p-20">
-                                                    <ul class="categories me-md-4">
-                                                        <li>
-                                                            <strong>Nombres d'enfants dans la tranche 0-6ans : </strong>
-                                                            <span>{{ $orphelinat->data_stats['children_number_0_6'] ?? 0 }}</span>
-                                                        </li>
-
-                                                        <li>
-                                                            <strong>Nombres d'enfants dans la tranche 7-13ans : </strong>
-                                                            <span>{{ $orphelinat->data_stats['children_number_7_13'] ?? 0 }}</span>
-                                                        </li>
-                                                        <li>
-                                                            <strong>Nombres d'enfants dans la tranche 14-21ans : </strong>
-                                                            <span>{{ $orphelinat->data_stats['children_number_14_21'] ?? 0 }}</span>
-                                                        </li>
-                                                        <li>
-                                                            <strong>Nombre de garçons : </strong>
-                                                            <span>{{ $orphelinat->data_stats['boys_number'] ?? 0 }}</span>
-                                                        </li>
-                                                        <li>
-                                                            <strong>Nombre de filles : </strong>
-                                                            <span>{{ $orphelinat->data_stats['girls_number'] ?? 0 }}</span>
-                                                        </li>
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                    </div>
-                                    <div class="accordion-item">
-                                        <h2 class="accordion-header" id="heading3">
-                                            <button class="accordion-button collapsed" type="button"
-                                                data-bs-toggle="collapse" data-bs-target="#collapse3" aria-expanded="false"
-                                                aria-controls="collapseOne">
-                                                Education
-                                                <i class="bi bi-caret-down" style="padding: 2px"></i>
-                                            </button>
-                                        </h2>
-                                        <div id="collapse3" class="accordion-collapse collapse" aria-labelledby="heading3"
-                                            data-bs-parent="#accordionExample">
-                                            <div class="accordion-body">
-                                                <div class="container p-20">
-                                                    <ul class="categories me-md-4">
-                                                        <li>
-                                                            <strong>Nombre d'enfants scolarisés : </strong>
-                                                            <span>{{ $orphelinat->data_education['school_children_number'] ?? 0 }}</span>
-                                                        </li>
-
-                                                        <li>
-                                                            <strong>Nombre d'enfants en classe d'examen : </strong>
-                                                            <span>{{ $orphelinat->data_education['schoolexam_children_number'] ?? 0 }}</span>
-                                                        </li>
-
-
-                                                        <li>
-                                                            <strong> nombre d'enfant en maternelle : </strong>
-                                                            <span>{{ $orphelinat->data_education['maternelle_children_number'] ?? 0 }}</span>
-                                                        </li>
-
-                                                        <li>
-                                                            <strong>Nombre d'enfants au primaire : </strong>
-                                                            <span>{{ $orphelinat->data_education['primary_children_number'] ?? 0 }}</span>
-                                                        </li>
-                                                        <li>
-                                                            <strong>Nombre d'enfants au collège : </strong>
-                                                            <span>{{ $orphelinat->data_education['college_children_number'] ?? 0 }}</span>
-                                                        </li>
-                                                        <li>
-                                                            <strong>Nombre d'enfants à l'université: </strong>
-                                                            <span>{{ $orphelinat->data_education['university_children_number'] ?? 0 }}</span>
-                                                        </li>
-                                                        <li>
-                                                            <strong>Nombre d'enfants en recherche de formation
-                                                                professionnelle:
-                                                            </strong>
-                                                            <span>{{ $orphelinat->data_education['professional_children_number'] ?? 0 }}</span>
-                                                        </li>
-
-
-                                                    </ul>
-                                                </div>
-
-                                            </div>
-                                        </div>
-                                    </div>
+                                    @else
+                                        <dl class="grid gap-x-8 text-[15px] sm:grid-cols-2">
+                                            @foreach ([
+                                                'school_children_number' => 'Enfants scolarisés',
+                                                'schoolexam_children_number' => 'En classe d\'examen',
+                                                'maternelle_children_number' => 'En maternelle',
+                                                'primary_children_number' => 'Au primaire',
+                                                'college_children_number' => 'Au collège',
+                                                'university_children_number' => 'À l\'université',
+                                                'professional_children_number' => 'En recherche de formation professionnelle',
+                                            ] as $key => $label2)
+                                                <div class="flex justify-between gap-4 border-b border-rule py-2.5"><dt class="text-slate">{{ $label2 }}</dt><dd class="font-bold tabular-nums text-indigo">{{ $education[$key] ?? 0 }}</dd></div>
+                                            @endforeach
+                                        </dl>
+                                    @endif
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="sidebar-box ">
-                        <div class="row">
-                            <div class="col-12 ">
-                                <div class="fund-wrap mt-0">
-                                    @include('components.donation-form')
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    @endforeach
                 </div>
+            </section>
 
-            </div>
+            @if (str_starts_with($map, '<iframe'))
+                <section data-reveal>
+                    @include('front.partials.section-title', ['title' => 'Comment trouver ' . ($identity['name'] ?? $orphelinat->name) . ' ?'])
+                    <div class="overflow-hidden rounded-box border border-rule [&_iframe]:block [&_iframe]:aspect-[4/3] [&_iframe]:h-auto [&_iframe]:w-full sm:[&_iframe]:aspect-video">{!! $map !!}</div>
+                </section>
+            @endif
         </div>
-        @if(count($other_orphanages) > 0)
-{{--            <div class="others mt-5 mb-5">--}}
-{{--                <div class="title mb-5" style="text-align: center">--}}
-{{--                    <h1 style="color: #0313A0; text-transform: uppercase">D'autres orphelinats de la ville de {{ $orphelinat->city->name }}</h1>--}}
-{{--                </div>--}}
-{{--                <div class="ftco-causes ftco-section">--}}
-{{--                    <div class="container-xl">--}}
-{{--                        <div class="row">--}}
-{{--                            <div class="orphanages-cards">--}}
-{{--                                @foreach($other_orphanages as $other)--}}
-{{--                                    @include("front.components.orphanage-card", ["orphanage" => $other])--}}
-{{--                                @endforeach--}}
-{{--                            </div>--}}
-{{--                        </div>--}}
-{{--                    </div>--}}
-{{--                </div>--}}
-{{--            </div>--}}
-        @endif
-        @if(str_starts_with($orphelinat->data_address['google_address'], '<iframe'))
-            <div class="f-container">
-                <div class="localisation-title mb-5" style="text-align: center">
-                    <h1 style="color: #0313A0; text-transform: uppercase">Comment trouver {{ $orphelinat->data_identity['name'] }} ?</h1>
-                </div>
-                <div class="pt-5">
-                    {!! $orphelinat->data_address['google_address'] ?? '' !!}
-                </div>
-            </div>
-        @endif
-    </section> <!-- .section -->
-    <style>
-        .f-container {
-            width: 100%;
-            margin: auto;
-        }
 
-        iframe { width: 100%; height: 400px }
-
-        .infos-utiles {
-            background-color: #0313A0;
-            color: #fff;
-            font-weight: 700;
-        }
-        button:hover, button:focus { color: unset }
-
-        .ftco-causes {
-            width: unset;
-            margin: auto;
-        }
-
-        .causes-wrap {
-            margin-right: 5px;
-        }
-
-        .ftco-causes .causes-wrap .img { width: 372px }
-
-        .info-donation {
-            transition: all 1s;
-            opacity: 1;
-        }
-
-        .info-donation.hidden {
-            transform: translateY(-20px);
-            opacity: 0;    
-        }
-    </style>
+        <aside id="donate" class="scroll-mt-24 lg:sticky lg:top-24 lg:self-start" aria-label="Faire un don">
+            @include('front.partials.donation-form')
+        </aside>
+    </div>
 @endsection

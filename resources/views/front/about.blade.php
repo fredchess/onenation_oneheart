@@ -1,187 +1,64 @@
 @extends('front.layouts.app')
 
 @section('title', 'À propos de One Nation One Heart')
+@section('meta_description', 'One Nation One Heart promeut l\'unité, la solidarité et l\'action sociale au bénéfice des orphelins et nécessiteux du Cameroun.')
+
 @section('content')
+    @include('front.partials.page-hero', ['title' => 'À propos de ONOH', 'crumbs' => ['À propos' => null], 'site' => 'hero_about'])
 
-
-    <section class="hero-wrap hero-wrap-2" style="background-image: url('{{ asset('lovecare/images/bg_5.jpg') }}');">
-        <div class="overlay"></div>
-        <div class="container">
-            <div class="row no-gutters slider-text align-items-center justify-content-center">
-                <div class="col-md-9 text-center">
-                    <p class="breadcrumbs"><span class="me-2"><a href="{{ route('public.home') }}">Accueil <i
-                                    class="fa fa-chevron-right"></i></a></span> <span>À propos <i
-                                class="fa fa-chevron-right"></i></span></p>
-                    <h1 class="mb-0 bread">À propos de ONOH</h1>
-                </div>
+    <section class="wrap grid items-center gap-10 py-12 lg:grid-cols-2 lg:gap-16 lg:py-16">
+        <div class="photo aspect-[4/5] max-h-[560px] lg:aspect-auto lg:h-full" data-reveal>
+            <x-onoh.site-photo for="about_photo" alt="Bénévoles de ONOH" sizes="(min-width: 1024px) 45vw, 100vw" />
+        </div>
+        <div data-reveal style="--delay: 100ms">
+            <h2 class="display border-b border-rule pb-5 text-[2.4rem] text-indigo md:text-[3.25rem]">Qui sommes-nous ?</h2>
+            <div class="mt-5 space-y-4 text-slate">
+                <p>One Nation One Heart est une association qui souhaite promouvoir sur le plan national l'unité, la solidarité et l'action sociale au bénéfice des orphelins et nécessiteux sous toutes leurs formes, dans la limite de nos capacités et en ligne avec notre objet principal.</p>
+                <p>Promouvoir le bien-être, l'éducation, le développement économique et social des enfants dans les orphelinats et centres sociaux camerounais.</p>
+                <p>Mettre en place des œuvres d'entraide et d'assistance fondées sur les principes d'équité et d'égalité à l'endroit des orphelins et nécessiteux.</p>
             </div>
+            <a href="{{ route('public.joinus') }}" class="btn-indigo mt-7">Rejoindre l'aventure <x-onoh.icon name="arrow-right" class="arrow" /></a>
         </div>
     </section>
 
-    <section class="ftco-section ftco-no-pt ftco-no-pb">
-        <div class="container-xl">
-            <div class="row g-lg-5">
-                <div class="col-md-6 d-flex align-items-stretch" data-aos="fade-up" data-aos-delay="100"
-                    data-aos-duration="1000">
-                    <div class="img img-2 w-100" style="background-image: url({{ asset('lovecare/images/about.jpg') }});">
+    @if ($team->count() > 0)
+        @php($initial = 8)
+        <section class="border-t border-rule bg-paper py-12 lg:py-16"
+                 @if ($teamDisplay === 'carousel') x-data="carousel(4000)" @pointerenter="paused = true" @pointerleave="paused = false" @focusin="paused = true" @endif>
+            <div class="wrap">
+                @include('front.partials.section-title', [
+                    'title' => 'Notre équipe',
+                    'text' => 'Les étoiles derrière ONOH.',
+                    'stacked' => true,
+                    'aside' => $teamDisplay === 'carousel'
+                        ? '<div class="flex gap-1.5" x-show="scrollable" x-cloak><button type="button" @click="go(-1)" class="grid size-11 place-items-center rounded-ui border border-rule bg-white text-indigo hover:border-indigo" aria-label="Membres précédents"><svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 6-6 6 6 6"/></svg></button><button type="button" @click="go(1)" class="grid size-11 place-items-center rounded-ui border border-rule bg-white text-indigo hover:border-indigo" aria-label="Membres suivants"><svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg></button></div>'
+                        : null,
+                ])
+
+                @if ($teamDisplay === 'carousel')
+                    <div x-ref="track" class="grid snap-x snap-mandatory auto-cols-[calc((100%-1rem)/2)] grid-flow-col gap-4 overflow-x-auto pb-1 [scrollbar-width:none] md:auto-cols-[calc((100%-2.5rem)/3)] md:gap-5 lg:auto-cols-[calc((100%-3.75rem)/4)] [&::-webkit-scrollbar]:hidden"
+                         tabindex="0" aria-label="Membres de l'équipe" data-reveal>
+                        @foreach ($team as $member)
+                            <div class="snap-start">@include('front.partials.team-card', ['member' => $member])</div>
+                        @endforeach
                     </div>
-                </div>
-                <div class="col-md-6 heading-section d-flex align-items-center" data-aos="fade-up" data-aos-delay="200"
-                    data-aos-duration="1000">
-                    <div class="mt-0 my-lg-5 py-5">
-                        <span class="subheading">Découvrez l'association One Nation One Heart</span>
-                        <h2 class="mb-4">Qui sommes-nous ?</h2>
-                        <p>
-                            One Nation One Heart est une association qui souhaite promouvoir sur le plan national l’unité,
-                            la solidarité, l’action sociale au bénéfice des orphelins et nécessiteux sous toutes leurs
-                            formes, dans la limite de nos capacités et en ligne avec notre objet principal.
-                        </p>
-                        <p>
-                            Promouvoir le bien-être, l’éducation, le développement économique et social des enfants dans les
-                            orphelinats et centres sociaux Camerounais.
-
-                        </p>
-                        <p>
-
-                            Mettre en place des œuvres d’entraide et d’assistance fondées sur les principes d’équité et
-                            d'égalité à l’endroit d’orphelins et nécessiteux.
-
-                        </p>
-
-                        <p><a href="#" class="btn btn-secondary py-3 px-4">Rejoindre l'aventure</a></p>
+                @else
+                    <div x-data="{ all: false }">
+                        <ul class="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-5 lg:grid-cols-4">
+                            @foreach ($team as $member)
+                                <li @if ($loop->index >= $initial) x-show="all" x-cloak x-transition.opacity.duration.300ms @else data-reveal style="--delay: {{ ($loop->index % 4) * 60 }}ms" @endif>
+                                    @include('front.partials.team-card', ['member' => $member])
+                                </li>
+                            @endforeach
+                        </ul>
+                        @if ($team->count() > $initial)
+                            <p class="mt-8 text-center" x-show="!all">
+                                <button type="button" class="btn-indigo" @click="all = true">Voir toute l'équipe ({{ $team->count() }}) <x-onoh.icon name="chevron-down" class="size-4" /></button>
+                            </p>
+                        @endif
                     </div>
-                </div>
+                @endif
             </div>
-        </div>
-    </section>
-
-    <section class="ftco-section">
-        <div class="container-fluid">
-            <div class="row justify-content-center pb-4">
-                <div class="col-lg-7 text-center heading-section" data-aos="fade-up" data-aos-duration="1000">
-                    <span class="subheading">Notre équipe</span>
-                    <h2 class="mb-5">Les étoiles derrière</h2>
-                </div>
-            </div>
-            <div class="row">
-                @foreach ($users as $user)
-                    @if ($user && isset($user->datas) && isset($user->datas['visible']) && $user->datas['visible'] == 1)
-                        @include("front.components.volunteer-item", ["volunteer" => $user])
-                    @endif
-                @endforeach
-            </div>
-        </div>
-    </section>
-
-    {{-- MASQUÉ PAR d-none --}}
-    <section class="ftco-section testimony-section img d-none" style="background-image: url(images/bg_4.jpg);">
-        <div class="overlay"></div>
-        <div class="container-xl">
-            <div class="row justify-content-center pb-4">
-                <div class="col-lg-7 text-center heading-section heading-section-white" data-aos="fade-up"
-                    data-aos-duration="1000">
-                    <span class="subheading">Testimonial</span>
-                    <h2 class="mb-5">What People Says</h2>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-12" data-aos="fade-up" data-aos-duration="1000" data-aos-delay="100">
-                    <div class="carousel-testimony">
-                        <div class="item">
-                            <div class="testimony-wrap">
-                                <div class="icon d-flex align-items-center justify-content-center"><span
-                                        class="fa fa-quote-left"></div>
-                                <div class="text">
-                                    <p class="mb-4">Far far away, behind the word mountains, far from the
-                                        countries Vokalia and Consonantia, there live the blind texts.</p>
-                                    <div class="d-flex align-items-center">
-                                        <div class="user-img" style="background-image: url(images/person_1.jpg)">
-                                        </div>
-                                        <div class="ps-3">
-                                            <p class="name">Roger Scott</p>
-                                            <span class="position">Marketing Manager</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="item">
-                            <div class="testimony-wrap">
-                                <div class="icon d-flex align-items-center justify-content-center"><span
-                                        class="fa fa-quote-left"></div>
-                                <div class="text">
-                                    <p class="mb-4">Far far away, behind the word mountains, far from the
-                                        countries Vokalia and Consonantia, there live the blind texts.</p>
-                                    <div class="d-flex align-items-center">
-                                        <div class="user-img" style="background-image: url(images/person_2.jpg)">
-                                        </div>
-                                        <div class="ps-3">
-                                            <p class="name">Roger Scott</p>
-                                            <span class="position">Marketing Manager</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="item">
-                            <div class="testimony-wrap">
-                                <div class="icon d-flex align-items-center justify-content-center"><span
-                                        class="fa fa-quote-left"></div>
-                                <div class="text">
-                                    <p class="mb-4">Far far away, behind the word mountains, far from the
-                                        countries Vokalia and Consonantia, there live the blind texts.</p>
-                                    <div class="d-flex align-items-center">
-                                        <div class="user-img" style="background-image: url(images/person_3.jpg)">
-                                        </div>
-                                        <div class="ps-3">
-                                            <p class="name">Roger Scott</p>
-                                            <span class="position">Marketing Manager</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="item">
-                            <div class="testimony-wrap">
-                                <div class="icon d-flex align-items-center justify-content-center"><span
-                                        class="fa fa-quote-left"></div>
-                                <div class="text">
-                                    <p class="mb-4">Far far away, behind the word mountains, far from the
-                                        countries Vokalia and Consonantia, there live the blind texts.</p>
-                                    <div class="d-flex align-items-center">
-                                        <div class="user-img" style="background-image: url(images/person_4.jpg)">
-                                        </div>
-                                        <div class="ps-3">
-                                            <p class="name">Roger Scott</p>
-                                            <span class="position">Marketing Manager</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="item">
-                            <div class="testimony-wrap">
-                                <div class="icon d-flex align-items-center justify-content-center"><span
-                                        class="fa fa-quote-left"></div>
-                                <div class="text">
-                                    <p class="mb-4">Far far away, behind the word mountains, far from the
-                                        countries Vokalia and Consonantia, there live the blind texts.</p>
-                                    <div class="d-flex align-items-center">
-                                        <div class="user-img" style="background-image: url(images/person_2.jpg)">
-                                        </div>
-                                        <div class="ps-3">
-                                            <p class="name">Roger Scott</p>
-                                            <span class="position">Marketing Manager</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-
+        </section>
+    @endif
 @endsection

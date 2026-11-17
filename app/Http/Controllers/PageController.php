@@ -12,6 +12,8 @@ use App\Models\Partner;
 use App\Models\TeamMember;
 use App\Models\User;
 use App\Rules\ValidTurnstileToken;
+use App\Support\OrphanageMap;
+use App\Support\OrphanageSearch;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -76,7 +78,9 @@ class PageController extends Controller
 
         $blogs = Blog::latest()->paginate(9);
 
-        return view('front.home', compact('partners', 'testimonies', 'total_donations', 'blogs', 'total_enfants', 'total_orphanages', 'total_cities'));
+        $mapPoints = OrphanageMap::points();
+
+        return view('front.home', compact('partners', 'testimonies', 'total_donations', 'blogs', 'total_enfants', 'total_orphanages', 'total_cities', 'mapPoints'));
     }
 
     public function contact(Request $request)
@@ -113,44 +117,37 @@ class PageController extends Controller
     {
         try {
             $villes = City::all();
-            $searchTerm = trim((string) ($request->input('street') ?: $request->input('search') ?: ''));
+            $query = Orphanage::query();
+            $this->applyOrphanageFilters($query, $request);
 
-            if ($searchTerm !== '') {
-                $orphelinats = Orphanage::search($searchTerm)
-                    ->query(function (Builder $query) use ($request) {
-                        $this->applyOrphanageFilters($query, $request);
-                    });
-            } else {
-                $orphelinats = Orphanage::query();
-                $this->applyOrphanageFilters($orphelinats, $request);
+            // Recherche texte (Typesense si configuré) : nom, puis quartier/ville
+            $matchingIds = null;
+            $name = trim((string) $request->input('search'));
+            $street = trim((string) $request->input('street'));
+
+            if ($name !== '') {
+                $matchingIds = OrphanageSearch::ids($name, ['name']);
             }
 
-            // le nombre d'enfants
-            if ($request->profesional_search_children != null) {
-
+            if ($street !== '') {
+                $streetIds = OrphanageSearch::ids($street, ['localisation', 'city_name']);
+                $matchingIds = $matchingIds === null ? $streetIds : array_values(array_intersect($matchingIds, $streetIds));
             }
 
-            // le nombre d'enfants en recherche de professionnalisation
-            if ($request->total_children != null) {
-
+            if ($matchingIds !== null) {
+                $query->whereIn('orphanages.id', $matchingIds ?: [0]);
             }
 
-            // le nombre d'enfants en classe d'examen
-            if ($request->exam_class_children != null) {
+            $sort = (string) $request->input('sort', $matchingIds !== null ? '0' : '3');
+            $this->applyOrphanageSort($query, $sort, $matchingIds);
 
-            }
+            $mapPoints = OrphanageMap::points((clone $query)->pluck('orphanages.id')->all());
+            $orphelinats = $query->paginate(9)->withQueryString();
 
-            $orphelinats = $orphelinats->paginate(9);
-
-            $orphelinats->appends(['search' => $request->input('search'),
-                'street' => $request->input('street'),
-                'sort' => $request->input('sort'),
-                'villes' => $request->input('villes', []),
-                'ages' => $request->input('ages', []),
-                'besoins' => $request->input('besoins', [])]);
-
-            return view('front.orphanages', compact('orphelinats', 'villes'));
+            return view('front.orphanages', compact('orphelinats', 'villes', 'sort', 'mapPoints'));
         } catch (Exception $e) {
+            report($e);
+
             return redirect()->route('public.orphanages');
         }
     }
@@ -159,9 +156,6 @@ class PageController extends Controller
     {
         $query->where('status', 1)->with(['city', 'dons']);
 
-        if ($request->filled('street') && $request->filled('search')) {
-            $query->where('name', 'like', '%'.$request->input('search').'%');
-        }
 
         $cities = array_filter((array) $request->villes);
 
@@ -205,20 +199,29 @@ class PageController extends Controller
                 }
             });
         }
+    }
 
-        $sort = $request->input('sort', '3');
+    private function applyOrphanageSort(Builder $query, string $sort, ?array $matchingIds): void
+    {
+        $donationsTotal = '(SELECT COALESCE(SUM(amount), 0) FROM donations WHERE orphanage_id = orphanages.id AND payment_status = ?)';
+
         switch ($sort) {
-            case 1:
-                $query->orderBy('data_stats->children_number', 'asc');
+            case '0':
+                if ($matchingIds) {
+                    $query->orderByRaw('FIELD(orphanages.id, ' . implode(',', array_map('intval', $matchingIds)) . ')');
+                }
                 break;
-            case 2:
-                $query->orderBy('data_stats->children_number', 'desc');
+            case '1':
+                $query->orderByRaw("CAST(JSON_UNQUOTE(JSON_EXTRACT(orphanages.data_stats, '$.children_number')) AS UNSIGNED) ASC");
                 break;
-            case 4:
-                $query->orderByRaw('(SELECT COALESCE(SUM(amount), 0) FROM donations WHERE orphanage_id = orphanages.id AND payment_status = ?) DESC', ['success']);
+            case '2':
+                $query->orderByRaw("CAST(JSON_UNQUOTE(JSON_EXTRACT(orphanages.data_stats, '$.children_number')) AS UNSIGNED) DESC");
+                break;
+            case '4':
+                $query->orderByRaw("{$donationsTotal} DESC", [PaymentStatus::SUCCESS->value]);
                 break;
             default:
-                $query->orderByRaw('(SELECT COALESCE(SUM(amount), 0) FROM donations WHERE orphanage_id = orphanages.id AND payment_status = ?) ASC', ['success']);
+                $query->orderByRaw("{$donationsTotal} ASC", [PaymentStatus::SUCCESS->value]);
                 break;
         }
     }

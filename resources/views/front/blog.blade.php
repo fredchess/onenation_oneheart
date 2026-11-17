@@ -1,59 +1,23 @@
 @extends('front.layouts.app')
 @section('title', 'Blogs')
+@section('meta_description', 'Les actions menées par One Nation One Heart dans les orphelinats du Cameroun grâce à vos dons.')
 
 @section('content')
+    @include('front.partials.page-hero', ['title' => 'Blog', 'crumbs' => ['Blog' => null], 'site' => 'hero_blog'])
 
-    <section class="hero-wrap hero-wrap-2" style="background-image: url('{{ asset('lovecare/images/bg_5.jpg') }}');">
-        <div class="overlay"></div>
-        <div class="container">
-            <div class="row no-gutters slider-text align-items-center justify-content-center">
-                <div class="col-md-9 text-center">
-                    <p class="breadcrumbs"><span class="me-2"><a href="{{route("public.home")}}">Accueil <i
-                                    class="fa fa-chevron-right"></i></a></span> <span>Blog <i
-                                class="fa fa-chevron-right"></i></span></p>
-                    <h1 class="mb-0 bread">Blog</h1>
-                </div>
+    <section class="wrap py-12 lg:py-16">
+        @if ($blogs->count() > 0)
+            <div class="grid gap-x-7 gap-y-11 sm:grid-cols-2 lg:grid-cols-3">
+                @foreach ($blogs as $blog)
+                    @include('front.partials.blog-card', ['blog' => $blog, 'delay' => ($loop->index % 3) * 70])
+                @endforeach
             </div>
-        </div>
+            {{ $blogs->links('front.partials.pagination') }}
+        @else
+            <div class="rounded-box border border-rule bg-paper px-6 py-14 text-center">
+                <img src="{{ asset('lovecare/images/empty.svg') }}" alt="" class="mx-auto w-44" loading="lazy">
+                <p class="display mt-6 text-3xl text-indigo">Pas d'articles enregistrés pour l'instant</p>
+            </div>
+        @endif
     </section>
-
-    <section class="ftco-section">
-        <div class="container-xl">
-
-
-
-            <div class="row justify-content-center">
-                @if ($blogs->count() > 0)
-                    @foreach ($blogs as $blog)
-                        @include("front.components.blog-card", ["blog" => $blog])
-                    @endforeach
-                @else
-                    <div class="d-flex" style="flex-direction: column; align-items: center;">
-                        <img src="{{ asset('lovecare/images/empty.svg') }}" style="margin: 50px auto; width: 300px" />
-                        Pas d'articles enregistré pour l'instant
-                    </div>
-                @endif
-            </div>
-
-            <div class="row mt-5">
-                <div class="col text-center">
-                    <div class="block-27">
-                        {{ $blogs->links() }}
-                        {{-- <ul>
-                            <li><a href="#">&lt;</a></li>
-                            <li class="active"><span>1</span></li>
-                            <li><a href="#">2</a></li>
-                            <li><a href="#">3</a></li>
-                            <li><a href="#">4</a></li>
-                            <li><a href="#">5</a></li>
-                            <li><a href="#">&gt;</a></li>
-                        </ul> --}}
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    </section>
-
-
 @endsection

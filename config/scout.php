@@ -1,7 +1,5 @@
 <?php
 
-use App\Models\Orphanage;
-
 return [
     'driver' => env('SCOUT_DRIVER', 'database'),
 
@@ -54,44 +52,9 @@ return [
             'num_retries' => env('TYPESENSE_NUM_RETRIES', 3),
             'retry_interval_seconds' => env('TYPESENSE_RETRY_INTERVAL_SECONDS', 1),
         ],
-        'model-settings' => [
-            Orphanage::class => [
-                'collection-schema' => [
-                    'fields' => [
-                        [
-                            'name' => 'id',
-                            'type' => 'string',
-                        ],
-                        [
-                            'name' => 'name',
-                            'type' => 'string',
-                        ],
-                        [
-                            'name' => 'localisation',
-                            'type' => 'string',
-                            'optional' => true,
-                        ],
-                        [
-                            'name' => 'city_name',
-                            'type' => 'string',
-                            'optional' => true,
-                        ],
-                        [
-                            'name' => 'status',
-                            'type' => 'int32',
-                        ],
-                        [
-                            'name' => 'created_at',
-                            'type' => 'int64',
-                        ],
-                    ],
-                    'default_sorting_field' => 'created_at',
-                ],
-                'search-parameters' => [
-                    'query_by' => 'name,localisation,city_name',
-                ],
-            ],
-        ],
+        // Collection schema and search parameters: Orphanage::typesenseCollectionSchema()
+        // and Orphanage::typesenseSearchParameters().
+        'model-settings' => [],
         'import_action' => env('TYPESENSE_IMPORT_ACTION', 'upsert'),
     ],
 ];

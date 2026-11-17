@@ -174,7 +174,18 @@ class OrphanageResource extends Resource
                         TextInput::make('data_address.google_address')
                             ->label('Adresse Google'),
                         TextInput::make('data_address.localisation')
-                            ->label('Localisation')
+                            ->label('Localisation'),
+                        TextInput::make('location.lat')
+                            ->label('Latitude (carte)')
+                            ->numeric()
+                            ->minValue(1.5)
+                            ->maxValue(13.2)
+                            ->helperText('Remplie automatiquement depuis l\'adresse Google. Clic droit sur Google Maps pour copier des coordonnées exactes.'),
+                        TextInput::make('location.lng')
+                            ->label('Longitude (carte)')
+                            ->numeric()
+                            ->minValue(8.3)
+                            ->maxValue(16.3),
                     ])
                     ->collapsible()
                     ->collapsed()

@@ -45,8 +45,18 @@ services:
       timeout: 5s
       retries: 3
 
+  typesense:
+    image: typesense/typesense:28.0
+    restart: unless-stopped
+    command: --data-dir /data --api-key=${TYPESENSE_API_KEY:?TYPESENSE_API_KEY must be set} --enable-cors=false
+    volumes:
+      - typesense-data:/data
+    networks:
+      - onoh
+
 volumes:
   storage-data:
+  typesense-data:
 
 networks:
   onoh:

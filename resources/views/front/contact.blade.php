@@ -1,90 +1,63 @@
 @extends('front.layouts.app')
 @section('title', 'Contact')
+@section('meta_description', 'Contactez One Nation One Heart.')
 
 @section('content')
+    @include('front.partials.page-hero', ['title' => 'Contact', 'crumbs' => ['Contact' => null], 'site' => 'hero_contact'])
 
+    <section class="wrap grid gap-12 py-12 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-16 lg:py-16">
+        <div class="min-w-0">
+            @include('front.partials.section-title', [
+                'title' => 'Contactez-nous',
+                'text' => 'Nous sommes ouverts ! Laissez-nous un message et nous reviendrons vers vous très rapidement.',
+            ])
 
-    <section class="hero-wrap hero-wrap-2" style="background-image: url('{{asset("lovecare/images/bg_5.jpg")}}');">
-      <div class="overlay"></div>
-      <div class="container">
-        <div class="row no-gutters slider-text align-items-center justify-content-center">
-          <div class="col-md-9 text-center">
-            <p class="breadcrumbs"><span class="me-2"><a href="{{route("public.home")}}">Accueil <i class="fa fa-chevron-right"></i></a></span> <span>Contact <i class="fa fa-chevron-right"></i></span></p>
-            <h1 class="mb-0 bread">Contact</h1>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="ftco-section ">
-      <div class="container-xl">
-        <div class="wrapper">
-          <div class="row g-0">
-            
-            <div class="col-lg-12">
-              <div class="contact-wrap w-100 p-md-5 p-4">
-                <h3>Contactez-nous</h3>
-                <p class="mb-4">Nous sommes ouverts ! Laissez-nous un message et nous reviendrons vers vous très rapidement</p>
-                <div class="row mb-4">
-                  <div class="col-md-4">
-                    <div class="dbox w-100 d-flex align-items-start">
-                      <div class="text">
-                        <p><span>Adresse:</span> Omnisports, Yaoundé, Cameroun</p>
-                      </div>
+            {{-- Ouvre la messagerie de l'utilisateur avec le message pré-rempli --}}
+            <form class="grid gap-5" data-reveal x-data="{ name: '', email: '', subject: '', message: '' }"
+                  @submit.prevent="window.location.href = 'mailto:contact@onoh.org?subject=' + encodeURIComponent(subject || 'Message depuis onoh.org') + '&body=' + encodeURIComponent(message + '\n\n' + name + ' (' + email + ')')">
+                <div class="grid gap-5 sm:grid-cols-2">
+                    <div>
+                        <label for="contact-name" class="label">Nom complet</label>
+                        <input id="contact-name" type="text" class="field" x-model="name" autocomplete="name" required>
                     </div>
-                  </div>
-                  <div class="col-md-4">
-                    <div class="dbox w-100 d-flex align-items-start">
-                      <div class="text">
-                        <p><span>Email:</span> <a href="mailto:info@yoursite.com">contact@onoh.org</a></p>
-                      </div>
+                    <div>
+                        <label for="contact-email" class="label">Email</label>
+                        <input id="contact-email" type="email" class="field" x-model="email" autocomplete="email" required>
                     </div>
-                  </div>
-                  <div class="col-md-4">
-                    <div class="dbox w-100 d-flex align-items-start">
-                      <div class="text">
-                        <p><span>Telephone / Whatsapp:</span> <span class="text">+237 6 55 02 98 67 / +33 6 14 59 75 93</span></p>
-                      </div>
-                    </div>
-                  </div>
                 </div>
-                <form id="contactForm" name="contactForm" class="contactForm">
-                  <div class="row">
-                    <div class="col-lg-4">
-                      <div class="form-group">
-                        <input type="text" class="form-control" name="name" id="name" placeholder="Nom complet">
-                      </div>
-                    </div>
-                    <div class="col-lg-4"> 
-                      <div class="form-group">
-                        <input type="email" class="form-control" name="email" id="email" placeholder="Email">
-                      </div>
-                    </div>
-                    <div class="col-md-4">
-                      <div class="form-group">
-                        <input type="text" class="form-control" name="subject" id="subject" placeholder="Objet">
-                      </div>
-                    </div>
-                    <div class="col-md-12">
-                      <div class="form-group">
-                        <textarea name="message" class="form-control" id="message" cols="30" rows="7" placeholder="Votre message ici"></textarea>
-                      </div>
-                    </div>
-                    <div class="col-md-12">
-                      <div class="form-group">
-                        <input type="submit" value="Envoyer le message" class="btn btn-primary">
-                        <div class="submitting"></div>
-                      </div>
-                    </div>
-                  </div>
-                </form>
-                
-              </div>
-            </div>
-          </div>
+                <div>
+                    <label for="contact-subject" class="label">Objet</label>
+                    <input id="contact-subject" type="text" class="field" x-model="subject">
+                </div>
+                <div>
+                    <label for="contact-message" class="label">Message</label>
+                    <textarea id="contact-message" rows="6" class="field" x-model="message" required></textarea>
+                </div>
+                <div class="flex flex-wrap items-center gap-4">
+                    <button type="submit" class="btn-coral">Envoyer le message <x-onoh.icon name="arrow-right" class="arrow" /></button>
+                    <p class="text-sm text-slate">Votre messagerie s'ouvrira avec le message prêt à envoyer.</p>
+                </div>
+            </form>
         </div>
-      </div>
-    </section> 
-    
 
+        <aside class="lg:sticky lg:top-24 lg:self-start" data-reveal style="--delay: 100ms">
+            <dl class="ndop divide-y divide-white/12 rounded-box px-6 text-white">
+                <div class="py-5">
+                    <dt class="text-xs font-bold uppercase tracking-[.12em] text-sky">Adresse</dt>
+                    <dd class="mt-1 font-semibold">Omnisports, Yaoundé, Cameroun</dd>
+                </div>
+                <div class="py-5">
+                    <dt class="text-xs font-bold uppercase tracking-[.12em] text-sky">Email</dt>
+                    <dd class="mt-1 font-semibold"><a href="mailto:contact@onoh.org" class="hover:underline">contact@onoh.org</a></dd>
+                </div>
+                <div class="py-5">
+                    <dt class="text-xs font-bold uppercase tracking-[.12em] text-sky">Téléphone / WhatsApp</dt>
+                    <dd class="mt-1 font-semibold">
+                        <a href="https://wa.me/237655029867" target="_blank" rel="noopener" class="hover:underline">+237 6 55 02 98 67</a><br>
+                        <a href="tel:+33614597593" class="hover:underline">+33 6 14 59 75 93</a>
+                    </dd>
+                </div>
+            </dl>
+        </aside>
+    </section>
 @endsection

@@ -1,202 +1,96 @@
 @extends('front.layouts.app')
 @section('title', 'Rejoignez-nous')
+@section('meta_description', 'Devenez bénévole chez One Nation One Heart et aidez les orphelinats du Cameroun.')
 
-@section('css')
-    <style>
-      label{
-        margin-top: 1rem;
-      }
-
-      .checkbox-item{
-        margin: 5px 10px;
-        padding: 5px;
-        border: 2px dashed #FF000000;
-        cursor: pointer;
-      }
-      .checkbox-item:active{
-        margin: 5px 10px;
-        padding: 5px;
-        border: 2px dashed #FF000055;
-      }
-      .checkbox-item label{
-        margin-top: 0px;
-      }
-
-</style>
-@endsection
 @section('content')
+    @include('front.partials.page-hero', ['title' => 'Rejoignez-nous', 'crumbs' => ['Rejoignez-nous' => null], 'site' => 'hero_joinus'])
 
+    <section class="wrap grid gap-12 py-12 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-16 lg:py-16">
+        <div class="min-w-0">
+            @include('front.partials.section-title', [
+                'title' => "Formulaire d'inscription",
+                'text' => "N'hésitez pas à nous rejoindre et à mettre votre pierre à l'édifice. À temps plein ou partiel, nous sommes déjà ravis d'avoir vos compétences dans nos équipes.",
+            ])
 
-    <section class="hero-wrap hero-wrap-2" style="background-image: url('{{ asset('lovecare/images/bg_5.jpg') }}');">
-        <div class="overlay"></div>
-        <div class="container">
-            <div class="row no-gutters slider-text align-items-center justify-content-center">
-                <div class="col-md-9 text-center">
-                    <p class="breadcrumbs"><span class="me-2"><a href="{{ route('public.home') }}">Accueil <i
-                                    class="fa fa-chevron-right"></i></a></span> <span>Rejoignez-nous <i
-                                class="fa fa-chevron-right"></i></span></p>
-                    <h1 class="mb-0 bread">Rejoignez-nous</h1>
-                </div>
-            </div>
-        </div>
-    </section>
+            <form id="become-volunteer" action="{{ route('public.joinus.register') }}" method="POST" class="grid gap-8" data-reveal>
+                @csrf
 
-    <section class="ftco-section ">
-        <div class="container-xl">
-            <div class="wrapper">
-                <div class="row g-0">
+                @if ($errors->any())
+                    <div class="rounded-box bg-coral/10 px-5 py-4 text-coral-deep" role="alert">
+                        <p class="font-bold">Merci de corriger les points suivants :</p>
+                        <ul class="mt-1.5 list-disc pl-5 text-sm">
+                            @foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach
+                        </ul>
+                    </div>
+                @endif
 
-                    <div class="col-lg-12">
-                        <div class="contact-wrap w-100 p-md-5 p-4">
-                            <span class="subheading">N'hésitez pas à nous rejoindre et mettre votre pierre à l'édifice.</span>
-                            <h1>Formulaire d'inscription</h1>
-                            <p class="mb-4">Nous vous remercions d'avance de vous inscrire en tant que bénévole.
-                                Que ce soit à temps plein ou partiel, nous sommes déjà ravis d'avoir vos compétences dans
-                                nos équipes</p>
-
-                                @include("components.successError")
-                            <div class="row mb-4 mt-5">
-
-                                <div class="col-md-4">
-                                    <div class="dbox w-100 d-flex align-items-start">
-                                        <div class="text">
-                                            <p><span>Si vous avez des questions, contactez-nous au:</span><span class="text">+237 6 55 02 98 67 / +33 6 14 59 75 93</span></p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <form id="become-volunteer" name="become-volunteer" class="become-volunteer" action="{{route("public.joinus.register")}}"  method="POST">
-                              @csrf
-                                <div class="row">
-                                    <div class="col-lg-4">
-                                        <div class="form-group">
-                                            <label for="">Nom complet</label>
-                                            <input type="text" autofocus class="form-control" name="name" id="name" value="{{ old('name') }}"
-                                                placeholder="Nom complet">
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-4">
-                                        <div class="form-group">
-                                            <label for="">Email</label>
-                                            <input type="email" class="form-control" name="email" id="email" value="{{ old('email') }}"
-                                                placeholder="Email">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="form-group">
-                                            <label for="">N° de telephone</label>
-                                            <input type="tel" class="form-control" name="tel" id="tel" value="{{ old('tel') }}"
-                                                placeholder="N° de téléphone ">
-                                        </div>
-                                    </div>
-
-                                    <div class="col-lg-6">
-                                        <div class="form-group">
-                                            <label for="">Comment as-tu connu One Nation One Heart (ONOH)?</label>
-                                            <select name="provenance" class="form-control" id="" value="{{ old('provenance') }}">
-                                                <option value="bouche-oreille">Bouche à oreille</option>
-                                                <option value="reseaux-sociaux">Réseaux sociaux</option>
-                                                <option value="autres">Autres</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-6">
-                                        <div class="form-group">
-                                            <label for="">Dans quelle ville résides-tu ?</label>
-
-                                            <input type="text" class="form-control" name="city" id="city" value="{{ old('city') }}"
-                                                placeholder="Votre ville de résidence">
-                                        </div>
-                                    </div>
-
-
-                                    <div class="col-md-12">
-                                        <div class="form-group">
-                                            <label for="">As-tu deja été investi précédemment dans une association a but non
-                                                lucratif? Si oui, parle nous-en en quelques mots.</label>
-                                            <textarea name="past_experience" class="form-control" id="message" cols="30" rows="7"
-                                                placeholder="As-tu deja été investi précédemment dans une association a but non lucrative? Si oui, parle nous-en en quelques mots.">{{ old('past_experience') }}</textarea>
-                                        </div>
-                                    </div>
-
-
-                                    <div class="col-lg-12">
-                                        <div class="form-group ">
-                                            <label for="">Quelles sont tes preferences en terme d'activites au sein de ONOH
-                                                ?</label>
-                                            <div class="d-flex flex-wrap">
-                                                <div class="checkbox-item">
-                                                    <label for="preference-dev-web">
-                                                        <input type="checkbox" id="preference-dev-web" name="preferences[]"
-                                                            value="developpement-web" id="">
-                                                        Pôle Developpement Web
-                                                    </label>
-                                                </div>
-                                                <div class="checkbox-item">
-                                                    <label for="preference-prospection">
-                                                        <input type="checkbox" id="preference-prospection"
-                                                            name="preferences[]" value="prospection">
-                                                            Pôle Prospection
-                                                    </label>
-                                                </div>
-                                                <div class="checkbox-item">
-                                                    <label for="preference-financement-relation-donateur">
-                                                        <input type="checkbox" id="preference-financement-relation-donateur"
-                                                            name="preferences[]" value="financement-relation-donateur">
-                                                            Pôle Finacement & Relation donateurs
-                                                    </label>
-                                                </div>
-                                                <div class="checkbox-item">
-                                                    <label for="preference-communication">
-                                                        <input type="checkbox" id="preference-communication"
-                                                            name="preferences[]" value="communication">
-                                                            Pôle Communication
-                                                    </label>
-                                                </div>
-                                                <div class="checkbox-item">
-                                                    <label for="preference-juridique">
-                                                        <input type="checkbox" id="preference-juridique" name="preferences[]"
-                                                            value="juridique">
-                                                            Pôle Juridique
-                                                    </label>
-                                                </div>
-                                                <div class="checkbox-item">
-                                                    <label for="preference-partenaire">
-                                                        <input type="checkbox" id="preference-partenaire" name="preferences[]"
-                                                            value="partenaire">
-                                                            Pôle Recherche de Partenariats
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-
-                                    <div class="col-md-12 mt-4">
-                                        @include('components.turnstile-widget', ['theme' => 'light'])
-                                    </div>
-                                    <div class="col-md-12 mt-3">
-                                        <div class="form-group">
-                                            <input type="submit" value="Devenir bénévole" class="btn p-3 px-4 btn-primary">
-                                            <div class="submitting"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </form>
-                            {{-- <div class="w-100 social-media mt-5">
-                                <h3>Suivez-nous</h3>
-                                <p>
-                                    <a href="https://facebook.com/">Facebook</a>
-                                    <a href="https://twitter.com/">Twitter</a>
-                                    <a href="https://instagram.com/">Instagram</a>
-                                </p>
-                            </div> --}}
-                        </div>
+                <div class="grid gap-5 sm:grid-cols-2">
+                    <div class="sm:col-span-2">
+                        <label for="name" class="label">Nom complet</label>
+                        <input type="text" class="field" name="name" id="name" value="{{ old('name') }}" autocomplete="name" required>
+                    </div>
+                    <div>
+                        <label for="email" class="label">Email</label>
+                        <input type="email" class="field" name="email" id="email" value="{{ old('email') }}" autocomplete="email" required>
+                    </div>
+                    <div>
+                        <label for="tel" class="label">N° de téléphone</label>
+                        <input type="tel" class="field" name="tel" id="tel" value="{{ old('tel') }}" autocomplete="tel" inputmode="tel" placeholder="6 XX XX XX XX">
+                    </div>
+                    <div>
+                        <label for="provenance" class="label">Comment as-tu connu ONOH ?</label>
+                        <select name="provenance" id="provenance" class="field">
+                            @foreach (['bouche-oreille' => 'Bouche à oreille', 'reseaux-sociaux' => 'Réseaux sociaux', 'autres' => 'Autres'] as $value => $label)
+                                <option value="{{ $value }}" @selected(old('provenance') === $value)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label for="city" class="label">Dans quelle ville résides-tu ?</label>
+                        <input type="text" class="field" name="city" id="city" value="{{ old('city') }}" autocomplete="address-level2">
                     </div>
                 </div>
-            </div>
+
+                <fieldset>
+                    <legend class="label">Tes préférences d'activités au sein de ONOH</legend>
+                    <div class="mt-1 flex flex-wrap gap-2">
+                        @foreach ([
+                            'developpement-web' => 'Pôle Développement Web',
+                            'prospection' => 'Pôle Prospection',
+                            'financement-relation-donateur' => 'Pôle Financement & Relation donateurs',
+                            'communication' => 'Pôle Communication',
+                            'juridique' => 'Pôle Juridique',
+                            'partenaire' => 'Pôle Recherche de Partenariats',
+                        ] as $value => $label)
+                            <label class="chip">
+                                <input type="checkbox" name="preferences[]" value="{{ $value }}" @checked(in_array($value, old('preferences', [])))>
+                                {{ $label }}
+                            </label>
+                        @endforeach
+                    </div>
+                </fieldset>
+
+                <div>
+                    <label for="message" class="label">As-tu déjà été investi dans une association à but non lucratif ? Si oui, parle-nous-en en quelques mots.</label>
+                    <textarea name="past_experience" id="message" rows="5" class="field">{{ old('past_experience') }}</textarea>
+                </div>
+
+                <div class="[&_.mb-4]:mb-0 empty:hidden">@include('components.turnstile-widget', ['theme' => 'light'])</div>
+
+                <button type="submit" class="btn-coral justify-self-start">Devenir bénévole <x-onoh.icon name="arrow-right" class="arrow" /></button>
+            </form>
         </div>
+
+        <aside class="lg:sticky lg:top-24 lg:self-start" data-reveal style="--delay: 100ms">
+            <div class="ndop rounded-box p-6 text-white">
+                <h2 class="display text-3xl">Une question ?</h2>
+                <p class="mt-2 text-sm text-[#dfe3ff]">Contactez-nous, nous vous répondrons rapidement.</p>
+                <ul class="mt-4 space-y-2 text-sm">
+                    <li><a href="tel:+237655029867" class="hover:underline">+237 6 55 02 98 67</a></li>
+                    <li><a href="tel:+33614597593" class="hover:underline">+33 6 14 59 75 93</a></li>
+                    <li><a href="mailto:contact@onoh.org" class="hover:underline">contact@onoh.org</a></li>
+                </ul>
+            </div>
+        </aside>
     </section>
-
-
 @endsection

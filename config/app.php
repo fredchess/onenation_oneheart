@@ -58,19 +58,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Redesign preview hosts
+    | Legacy hosts
     |--------------------------------------------------------------------------
     |
-    | Requests served on one of these hosts render the public site with the
-    | views from resources/views/{folder} instead of the legacy theme.
-    | Format: "new.onoh.org=redesign,ndop.onoh.org=ndop".
+    | Former hosts of the site (e.g. the "new" preview subdomain). Requests on
+    | them are permanently redirected to APP_URL, keeping the path.
+    | Format: "new.onoh.org,ndop.onoh.org".
     |
     */
 
-    'preview_hosts' => collect(explode(',', (string) env('PREVIEW_HOSTS', '')))
-        ->map(fn ($pair) => array_map('trim', explode('=', $pair, 2)))
-        ->filter(fn ($pair) => count($pair) === 2 && $pair[0] !== '' && $pair[1] !== '')
-        ->mapWithKeys(fn ($pair) => [strtolower($pair[0]) => $pair[1]])
+    'legacy_hosts' => collect(explode(',', (string) env('LEGACY_HOSTS', '')))
+        ->map(fn ($host) => strtolower(trim($host)))
+        ->filter()
+        ->values()
         ->all(),
 
     /*

@@ -39,6 +39,7 @@ class Orphanage extends Model implements HasMedia, SpatieSearchable, Viewable
         'city_id',
         'responsable_id',
         'run_at',
+        'location',
     ];
 
     /**
@@ -56,6 +57,7 @@ class Orphanage extends Model implements HasMedia, SpatieSearchable, Viewable
         'data_education' => 'array',
         'data_needs' => 'array',
         'data_projects' => 'array',
+        'location' => 'array',
     ];
 
     /**
@@ -80,6 +82,19 @@ class Orphanage extends Model implements HasMedia, SpatieSearchable, Viewable
             fn ($key) => trim(strip_tags($this->data_needs[$key] ?? '')) !== '',
             ARRAY_FILTER_USE_KEY
         );
+    }
+
+    /**
+     * Map coordinates, or null when unknown.
+     *
+     * @return array{lat: float, lng: float}|null
+     */
+    public function coordinates(): ?array
+    {
+        $lat = $this->location['lat'] ?? null;
+        $lng = $this->location['lng'] ?? null;
+
+        return is_numeric($lat) && is_numeric($lng) ? ['lat' => (float) $lat, 'lng' => (float) $lng] : null;
     }
 
     public function registerMediaCollections(): void
@@ -111,11 +126,14 @@ class Orphanage extends Model implements HasMedia, SpatieSearchable, Viewable
     public function toSearchableArray(): array
     {
         if (config('scout.driver') === 'typesense') {
+            // Curly apostrophes (’) are indexed as straight ones so they act as word separators
+            $text = fn (?string $value) => str_replace('’', "'", trim(strip_tags((string) $value)));
+
             return [
                 'id' => (string) $this->getKey(),
-                'name' => $this->name ?? '',
-                'localisation' => $this->data_address['localisation'] ?? '',
-                'city_name' => $this->city?->name ?? '',
+                'name' => $text($this->name),
+                'localisation' => $text($this->data_address['localisation'] ?? ''),
+                'city_name' => $text($this->city?->name),
                 'status' => (int) $this->status,
                 'created_at' => $this->created_at?->timestamp ?? time(),
             ];
@@ -160,6 +178,8 @@ class Orphanage extends Model implements HasMedia, SpatieSearchable, Viewable
                 ],
             ],
             'default_sorting_field' => 'created_at',
+            // "Biyem-Assi" / "Saint-Joseph" / "l'église" are also found word by word
+            'token_separators' => ['-', "'", '.', ','],
         ];
     }
 
@@ -168,6 +188,7 @@ class Orphanage extends Model implements HasMedia, SpatieSearchable, Viewable
         return [
             'query_by' => 'name,localisation,city_name',
             'prioritize_exact_match' => false,
+            'num_typos' => 2,
         ];
     }
 

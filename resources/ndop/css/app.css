@@ -6,7 +6,7 @@
 @import "@fontsource/barlow-condensed/latin-700.css";
 @import "@fontsource/barlow-condensed/latin-800.css";
 
-@source "../../views/ndop";
+@source "../../views/front";
 
 /* Direction « Ndop » : indigo du tissu ndop des Grassfields, corail pour l'action,
    angles légèrement arrondis, titres condensés en capitales. */
@@ -274,4 +274,236 @@
 @keyframes fade-up {
     from { opacity: 0; transform: translateY(14px); }
     to { opacity: 1; transform: none; }
+}
+
+/* Carte des orphelinats (Leaflet, resources/ndop/js/orphanage-map.js) */
+.om-map {
+    font-family: var(--font-sans);
+    background: var(--color-paper);
+    z-index: 0;
+}
+
+.om-map .leaflet-control-zoom a {
+    color: var(--color-indigo);
+}
+
+.om-pin span {
+    display: block;
+    width: 22px;
+    height: 22px;
+    border-radius: 9999px;
+    background: var(--color-coral);
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 1.5px var(--color-coral), 0 4px 10px -2px rgb(11 15 48 / .45);
+    transition: transform .18s var(--ease-out-soft);
+}
+
+.om-pin:hover span,
+.om-pin:focus-visible span {
+    transform: scale(1.25);
+}
+
+.om-cluster span {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 9999px;
+    background: var(--color-indigo);
+    color: #fff;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.15rem;
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 5px rgb(20 26 74 / .18), 0 6px 14px -4px rgb(11 15 48 / .5);
+}
+
+.om-popup .leaflet-popup-content-wrapper {
+    padding: 0;
+    border-radius: var(--radius-box);
+    overflow: hidden;
+    box-shadow: 0 22px 44px -22px rgb(11 15 48 / .7);
+}
+
+.om-popup .leaflet-popup-content {
+    margin: 0;
+    width: 280px !important;
+    font: inherit;
+    font-size: 14px;
+    line-height: 1.35;
+    color: var(--color-ink);
+}
+
+.om-popup a.leaflet-popup-close-button {
+    color: #fff;
+    text-shadow: 0 1px 4px rgb(0 0 0 / .6);
+    top: 4px;
+    right: 4px;
+}
+
+.om-card img {
+    display: block;
+    width: 100%;
+    height: 96px;
+    object-fit: cover;
+}
+
+.om-body {
+    padding: 12px 14px 14px;
+}
+
+.om-place {
+    margin: 0;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--color-slate);
+}
+
+.om-card h3 {
+    margin: 2px 0 10px;
+    font-family: var(--font-display);
+    font-weight: 800;
+    text-transform: uppercase;
+    font-size: 1.3rem;
+    line-height: 1;
+    color: var(--color-indigo);
+}
+
+.om-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin: 0 0 10px;
+}
+
+.om-stats div {
+    background: var(--color-paper);
+    border-radius: var(--radius-ui);
+    padding: 6px 8px;
+}
+
+.om-stats dt {
+    font-size: 11px;
+    color: var(--color-slate);
+}
+
+.om-stats dd {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.35rem;
+    line-height: 1.05;
+    color: var(--color-indigo);
+    font-variant-numeric: tabular-nums;
+}
+
+.om-ages {
+    display: grid;
+    gap: 4px;
+    margin-bottom: 10px;
+}
+
+.om-age {
+    display: grid;
+    grid-template-columns: 64px 1fr 26px;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--color-slate);
+}
+
+.om-age b {
+    text-align: right;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+}
+
+.om-bar {
+    height: 6px;
+    border-radius: 9999px;
+    background: var(--color-tab);
+    overflow: hidden;
+}
+
+.om-bar i {
+    display: block;
+    height: 100%;
+    background: var(--color-sky);
+}
+
+.om-needs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 0 0 10px;
+    padding: 0;
+    list-style: none;
+}
+
+.om-needs li {
+    border: 1px solid var(--color-rule);
+    background: var(--color-paper);
+    border-radius: var(--radius-ui);
+    padding: 1px 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--color-indigo);
+}
+
+.om-raised {
+    margin: 0 0 10px;
+    padding-top: 8px;
+    border-top: 1px solid var(--color-rule);
+    font-size: 13px;
+}
+
+.om-raised b {
+    color: var(--color-indigo);
+    font-variant-numeric: tabular-nums;
+}
+
+.om-popup a.om-link {
+    display: block;
+    padding: 9px 12px;
+    border-radius: var(--radius-ui);
+    background: var(--color-coral);
+    color: #fff;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    text-decoration: none;
+}
+
+.om-popup a.om-link:hover {
+    background: var(--color-coral-deep);
+}
+
+/* Fond de carte neutre pour laisser ressortir les points */
+.om-tiles {
+    filter: grayscale(1) contrast(.92) brightness(1.06);
+}
+
+.om-tip {
+    padding: 8px 12px;
+    border: 0;
+    border-radius: var(--radius-ui);
+    background: var(--color-indigo);
+    color: #fff;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 1.35;
+    box-shadow: 0 10px 24px -12px rgb(11 15 48 / .7);
+}
+
+.om-tip span {
+    color: var(--color-sky);
+    font-size: 12px;
+}
+
+.om-tip.leaflet-tooltip-top::before {
+    border-top-color: var(--color-indigo);
 }

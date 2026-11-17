@@ -72,6 +72,26 @@ Alpine.data('heroSlider', (count) => ({
     },
 }));
 
+// Carte des orphelinats : Leaflet n'est téléchargé que lorsque la carte devient visible
+Alpine.data('orphanageMap', () => ({
+    loading: true,
+    failed: false,
+    map: null,
+    async mount() {
+        if (this.map) return;
+        try {
+            const points = JSON.parse(this.$refs.points.textContent || '[]');
+            const { mountOrphanageMap } = await import('./orphanage-map.js');
+            this.map = mountOrphanageMap(this.$refs.canvas, points, this.$el.dataset.fit);
+        } catch (e) {
+            console.error(e);
+            this.failed = true;
+        } finally {
+            this.loading = false;
+        }
+    },
+}));
+
 window.Alpine = Alpine;
 Alpine.start();
 
