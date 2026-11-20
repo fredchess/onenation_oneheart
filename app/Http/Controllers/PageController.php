@@ -99,9 +99,30 @@ class PageController extends Controller
 
     public function blog(Request $request)
     {
-        $blogs = Blog::paginate(9);
+        $sorts = [
+            'recent' => 'Plus récents',
+            'ancien' => 'Plus anciens',
+            'populaire' => 'Plus lus',
+            'alpha' => 'Titre (A-Z)',
+        ];
 
-        return view('front.blog', compact('blogs'));
+        $sort = (string) $request->input('sort', 'recent');
+        if (! array_key_exists($sort, $sorts)) {
+            $sort = 'recent';
+        }
+
+        $query = Blog::query();
+
+        match ($sort) {
+            'ancien' => $query->oldest()->orderBy('id'),
+            'populaire' => $query->orderByViews()->latest()->orderByDesc('id'),
+            'alpha' => $query->orderBy('name')->orderByDesc('id'),
+            default => $query->latest()->orderByDesc('id'),
+        };
+
+        $blogs = $query->paginate(9)->withQueryString();
+
+        return view('front.blog', compact('blogs', 'sorts', 'sort'));
     }
 
     public function blog_detail(Request $request, $orphanage_slug)

@@ -72,8 +72,13 @@ class BlogResource extends Resource
                     ->searchable(),
                 IconColumn::make('status')
                     ->boolean()
-                    ->sortable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('Publié le')
+                    ->dateTime('d/m/Y H:i')
+                    ->sortable(),
             ])
+            ->defaultSort('created_at', 'desc')
             ->filters([
                 //
             ])

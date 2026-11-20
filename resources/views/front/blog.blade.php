@@ -7,6 +7,17 @@
 
     <section class="wrap py-12 lg:py-16">
         @if ($blogs->count() > 0)
+            <form method="GET" action="{{ route('public.blog') }}" class="mb-8 flex justify-end">
+                <label class="flex items-center gap-2 text-sm text-slate">
+                    Trier par :
+                    <select name="sort" class="bg-transparent font-semibold text-ink focus:outline-none" onchange="this.form.requestSubmit()">
+                        @foreach ($sorts as $value => $label)
+                            <option value="{{ $value }}" @selected($sort === $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </label>
+                <noscript><button type="submit" class="ml-3 text-sm font-semibold text-indigo">OK</button></noscript>
+            </form>
             <div class="grid gap-x-7 gap-y-11 sm:grid-cols-2 lg:grid-cols-3">
                 @foreach ($blogs as $blog)
                     @include('front.partials.blog-card', ['blog' => $blog, 'delay' => ($loop->index % 3) * 70])
