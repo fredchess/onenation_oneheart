@@ -262,6 +262,24 @@ class DonationController extends Controller
             return response('KO', Response::HTTP_NOT_FOUND);
         }
 
+        if (($versement->datas['app_transaction_ref'] ?? null) !== null
+            && $versement->datas['app_transaction_ref'] !== $request->app_transaction_ref) {
+            Log::warning('MyCoolPay payout callback rejected: app transaction ref mismatch.', [
+                'versement_id' => $versementId,
+                'app_transaction_ref' => $request->app_transaction_ref,
+            ]);
+
+            return response('KO', Response::HTTP_BAD_REQUEST);
+        }
+
+        if ((float) $request->transaction_amount !== (float) $versement->amount) {
+            Log::warning('MyCoolPay payout callback: amount mismatch.', [
+                'versement_id' => $versementId,
+                'expected' => $versement->amount,
+                'received' => $request->transaction_amount,
+            ]);
+        }
+
         $datas = $versement->datas ?? [];
         $datas['mcp_transaction_ref'] = $request->transaction_ref;
         $datas['mcp_operator_transaction_ref'] = $request->operator_transaction_ref;
@@ -269,13 +287,24 @@ class DonationController extends Controller
         $datas['mcp_transaction_status'] = $request->transaction_status;
         $datas['mcp_transaction_message'] = $request->transaction_message;
 
+        $newStatus = $this->mapExternalPaymentStatus($request->transaction_status);
+
+        // Un statut intermédiaire ne doit jamais écraser un résultat définitif.
+        if ($newStatus !== PaymentStatus::PENDING || $versement->payment_status === PaymentStatus::PENDING) {
+            $versement->payment_status = $newStatus;
+        }
+
+        if ($versement->payment_status !== PaymentStatus::PENDING) {
+            unset($datas['needs_check']);
+        }
+
         $versement->datas = $datas;
-        $versement->payment_status = $this->mapExternalPaymentStatus($request->transaction_status);
         $versement->save();
 
         Log::info('MyCoolPay payout callback processed', [
             'versement_id' => $versementId,
             'transaction_status' => $request->transaction_status,
+            'payment_status' => $versement->payment_status->value,
         ]);
 
         return response('OK', Response::HTTP_OK);

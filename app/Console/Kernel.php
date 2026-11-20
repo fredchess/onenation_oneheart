@@ -26,7 +26,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         if (AppSetting::get('auto_payout_enabled', false)) {
-            $cmd = $schedule->command('onoh:auto-payout');
+            $cmd = $schedule->command('onoh:auto-payout')->withoutOverlapping(120);
             if (AppSetting::get('auto_payout_interval') === 'weekly') {
                 $cmd->weekly()->days([AppSetting::get('auto_payout_day_of_week', 1)]);
             } else {

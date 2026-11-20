@@ -25,6 +25,14 @@ class Settings extends Page implements HasForms
 
     public ?array $data = [];
 
+    public static function canAccess(): bool
+    {
+        /** @var \App\Models\User|null $user */
+        $user = \Illuminate\Support\Facades\Auth::user();
+
+        return (bool) $user?->hasRole([\App\Enums\UserRoleEnum::ADMIN->value, \App\Enums\UserRoleEnum::SUPER_ADMIN->value]);
+    }
+
     public function mount(): void
     {
         $this->form->fill([

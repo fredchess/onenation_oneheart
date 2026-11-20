@@ -16,6 +16,24 @@ services:
       timeout: 5s
       retries: 3
 
+  # Planificateur Laravel (transferts automatiques). Contourne l'entrypoint : les migrations
+  # sont déjà lancées par onoh-php-fpm.
+  onoh-scheduler:
+    image: ghcr.io/fredchess/onenation_oneheart:latest
+    pull_policy: always
+    restart: unless-stopped
+    entrypoint: ["php", "artisan", "schedule:work"]
+    volumes:
+      - storage-data:/var/www/storage
+    env_file:
+      - .env
+    networks:
+      - onoh
+      - dokploy-network
+    depends_on:
+      onoh-php-fpm:
+        condition: service_healthy
+
   onoh-nginx:
     build:
       context: ..

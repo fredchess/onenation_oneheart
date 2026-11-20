@@ -222,21 +222,27 @@ class Orphanage extends Model implements HasMedia, SpatieSearchable, Viewable
         return $this->hasMany(Versement::class);
     }
 
+    /**
+     * Dons reçus pour cet orphelinat depuis la remise à zéro, moins ce qui lui a déjà été versé
+     * (ou est en cours de versement) sur ces fonds. Un versement partiel laisse donc le reste disponible,
+     * et un versement financé par les fonds non attribués ne consomme pas les dons de l'orphelinat.
+     */
     public function getAvailableDonationAmount(): float
     {
-        $lastSuccessfulVersement = $this->versements()
-            ->where('payment_status', PaymentStatus::SUCCESS->value)
-            ->latest()
-            ->first();
+        $since = Versement::payoutResetDate();
 
-        $resetDateRaw = AppSetting::get('payout_counter_reset_at');
-        $sinceDate = $lastSuccessfulVersement?->created_at
-            ?? ($resetDateRaw ? Carbon::parse($resetDateRaw) : now());
-
-        return (float) $this->donations()
+        $donations = (float) $this->donations()
             ->where('payment_status', PaymentStatus::SUCCESS->value)
-            ->where('created_at', '>', $sinceDate)
+            ->where('created_at', '>', $since)
             ->sum('amount');
+
+        $committed = (float) $this->versements()
+            ->committed()
+            ->fromOrphanageFunds()
+            ->where('created_at', '>', $since)
+            ->sum('amount');
+
+        return max(0.0, $donations - $committed);
     }
 
     public function hasPendingVersement(): bool

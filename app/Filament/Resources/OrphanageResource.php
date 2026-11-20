@@ -9,7 +9,9 @@ use App\Filament\Resources\OrphanageResource\Pages;
 use App\Models\Orphanage;
 use App\Models\User;
 use App\Models\Versement;
-use App\Services\MyCoolPayPayoutService;
+use App\Exceptions\Payout\PayoutException;
+use App\Services\PayoutManager;
+use App\Support\MobileMoneyNumber;
 use Filament\Forms;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
@@ -165,7 +167,8 @@ class OrphanageResource extends Resource
                             ->createOptionForm([
                                 TextInput::make('name')
                                     ->label('Nom')
-                                    ->required(),
+                                    ->required()
+                                    ->unique('cities', 'name'),
                                 TextInput::make('description'),
                                 TextInput::make('country_name'),
                                 TextInput::make('country_code'),
@@ -195,15 +198,18 @@ class OrphanageResource extends Resource
                     ->schema([
                         TextInput::make('bank_number'),
                         TextInput::make('om_momo')
-                            ->label('Numéro Mobile Money (OM / MTN)'),
+                            ->label('Numéro Mobile Money (OM / MTN)')
+                            ->tel()
+                            ->rules([fn (Get $get) => MobileMoneyNumber::rule(fn () => $get('payout_operator'))])
+                            ->requiredWith('payout_operator'),
                         Select::make('payout_operator')
                             ->label('Opérateur Mobile Money')
-                            ->options([
-                                'CM_OM' => 'Orange Money (CM_OM)',
-                                'CM_MOMO' => 'MTN Mobile Money (CM_MOMO)',
-                            ]),
+                            ->options(MobileMoneyNumber::OPERATORS)
+                            ->requiredWith('om_momo'),
                     ])
                     ->statePath('data_financial_infos')
+                    // Numéros de versement : définis uniquement par l'administration
+                    ->hidden(!$user->hasRole([UserRoleEnum::ADMIN->value, UserRoleEnum::SUPER_ADMIN->value]))
                     ->collapsible()
                     ->collapsed()
                     ->persistCollapsed()
@@ -359,6 +365,12 @@ class OrphanageResource extends Resource
                     ->icon('heroicon-o-arrow-up-circle')
                     ->color('success')
                     ->visible(function (Orphanage $record) {
+                        /** @var User $user */
+                        $user = Auth::user();
+                        if (! $user->hasRole([UserRoleEnum::ADMIN->value, UserRoleEnum::SUPER_ADMIN->value])) {
+                            return false;
+                        }
+
                         static $unassignedAmount = null;
                         if ($unassignedAmount === null) {
                             $unassignedAmount = Versement::getUnassignedAvailableAmount();
@@ -419,68 +431,39 @@ class OrphanageResource extends Resource
                             TextInput::make('phone')
                                 ->label('Numéro Mobile Money')
                                 ->default($record->data_financial_infos['om_momo'] ?? null)
+                                ->tel()
+                                ->rules([fn (Get $get) => MobileMoneyNumber::rule(fn () => $get('operator'))])
                                 ->required(),
 
                             Select::make('operator')
                                 ->label('Opérateur')
-                                ->options([
-                                    'CM_OM' => 'Orange Money (CM_OM)',
-                                    'CM_MOMO' => 'MTN Mobile Money (CM_MOMO)',
-                                ])
+                                ->options(MobileMoneyNumber::OPERATORS)
                                 ->default($record->data_financial_infos['payout_operator'] ?? null)
                                 ->required(),
                         ];
                     })
-                    ->action(function (Orphanage $record, array $data) {
-                        $versement = Versement::create([
-                            'orphanage_id' => $record->id,
-                            'amount' => $data['amount'],
-                            'payment_status' => PaymentStatus::PENDING->value,
-                            'initiated_by' => Auth::id(),
-                            'datas' => [
-                                'phone' => $data['phone'],
-                                'operator' => $data['operator'],
-                                'source' => $data['source'] ?? 'orphanage',
-                            ],
-                        ]);
-
+                    ->action(function (Orphanage $record, array $data, Action $action) {
                         try {
-                            $service = new MyCoolPayPayoutService();
-                            $balance = $service->getBalance();
-
-                            if ($balance < $versement->amount) {
-                                $versement->payment_status = PaymentStatus::FAILED;
-                                $versement->save();
-
-                                Notification::make()
-                                    ->danger()
-                                    ->title('Solde MyCoolPay insuffisant')
-                                    ->body('Solde disponible : ' . number_format($balance, 0, ',', ' ') . ' XAF')
-                                    ->persistent()
-                                    ->send();
-
-                                return;
-                            }
-
-                            $service->payout($versement, $data['phone'], $data['operator']);
-
-                            Notification::make()
-                                ->success()
-                                ->title('Versement initié')
-                                ->body('Le versement a été soumis à MyCoolPay.')
-                                ->send();
-
-                        } catch (\Exception $e) {
-                            $versement->payment_status = PaymentStatus::FAILED;
-                            $versement->save();
-
+                            $versement = app(PayoutManager::class)->initiate(
+                                $record,
+                                (float) $data['amount'],
+                                $data['phone'] ?? null,
+                                $data['operator'] ?? null,
+                                $data['source'] ?? Versement::SOURCE_ORPHANAGE,
+                                Auth::id(),
+                            );
+                        } catch (PayoutException $e) {
                             Notification::make()
                                 ->danger()
-                                ->title('Erreur lors du versement')
+                                ->title('Versement impossible')
                                 ->body($e->getMessage())
                                 ->persistent()
                                 ->send();
+
+                            $action->halt();
                         }
+
+                        VersementResource::notifyPayoutResult($versement);
                     }),
             ])
             ->bulkActions([
@@ -489,29 +472,29 @@ class OrphanageResource extends Resource
                 ]),
             ])
             ->modifyQueryUsing(function (Builder $query) {
-                $resetDate = \Carbon\Carbon::parse(
-                    \App\Models\AppSetting::get('payout_counter_reset_at', now()->toISOString())
-                )->format('Y-m-d H:i:s');
+                // Même calcul que Orphanage::getAvailableDonationAmount(), en SQL pour pouvoir trier.
+                $resetDate = Versement::payoutResetDate()->format('Y-m-d H:i:s');
 
                 $viewsTable = config('eloquent-viewable.models.view.table_name', 'views');
                 $orphanageClass = addslashes(Orphanage::class);
 
                 $query->selectRaw("
                     orphanages.*,
-                    COALESCE((
-                        SELECT SUM(d.amount) FROM donations d
-                        WHERE d.orphanage_id = orphanages.id
-                          AND d.payment_status = 'success'
-                          AND d.created_at > GREATEST(
-                            '{$resetDate}',
-                            COALESCE((
-                                SELECT v.created_at FROM versements v
-                                WHERE v.orphanage_id = orphanages.id
-                                  AND v.payment_status = 'success'
-                                ORDER BY v.created_at DESC LIMIT 1
-                            ), '1970-01-01 00:00:00')
-                          )
-                    ), 0) as dons_disponibles_sort,
+                    GREATEST(0,
+                        COALESCE((
+                            SELECT SUM(d.amount) FROM donations d
+                            WHERE d.orphanage_id = orphanages.id
+                              AND d.payment_status = 'success'
+                              AND d.created_at > '{$resetDate}'
+                        ), 0)
+                        - COALESCE((
+                            SELECT SUM(v.amount) FROM versements v
+                            WHERE v.orphanage_id = orphanages.id
+                              AND v.payment_status IN ('success', 'pending')
+                              AND v.created_at > '{$resetDate}'
+                              AND COALESCE(JSON_UNQUOTE(JSON_EXTRACT(v.datas, '$.source')), 'orphanage') IN ('orphanage', 'null')
+                        ), 0)
+                    ) as dons_disponibles_sort,
                     (
                         SELECT COUNT(*) FROM {$viewsTable}
                         WHERE viewable_type = '{$orphanageClass}'
